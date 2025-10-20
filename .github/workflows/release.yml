@@ -1,6 +1,11 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      force:
+        type: boolean
+        default: false
   push:
     branches:
       - main
