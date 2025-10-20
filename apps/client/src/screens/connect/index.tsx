@@ -1,0 +1,177 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Group } from '@/components/ui/group';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { connect } from '@/features/server/actions';
+import { useInfo } from '@/features/server/hooks';
+import { getFileUrl, getUrlFromServer } from '@/helpers/get-file-url';
+import { useForm } from '@/hooks/use-form';
+import { LocalStorageKey, SessionStorageKey } from '@/types';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+
+const Connect = memo(() => {
+  const { values, r, setErrors, onChange } = useForm<{
+    identity: string;
+    password: string;
+    rememberIdentity: boolean;
+  }>({
+    identity: localStorage.getItem(LocalStorageKey.IDENTITY) || '',
+    password: localStorage.getItem(LocalStorageKey.USER_PASSWORD) || '',
+    rememberIdentity: !!localStorage.getItem(LocalStorageKey.REMEMBER_IDENTITY)
+  });
+
+  const [loading, setLoading] = useState(false);
+  const info = useInfo();
+
+  const onRememberIdentityChange = useCallback(
+    (checked: boolean) => {
+      onChange('rememberIdentity', checked);
+
+      if (checked) {
+        localStorage.setItem(LocalStorageKey.REMEMBER_IDENTITY, 'true');
+      } else {
+        localStorage.removeItem(LocalStorageKey.REMEMBER_IDENTITY);
+      }
+    },
+    [onChange]
+  );
+
+  const onConnectClick = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = getUrlFromServer();
+      const response = await fetch(`${url}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identity: values.identity,
+          password: values.password
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setErrors(data.errors || {});
+        return;
+      }
+
+      const data = (await response.json()) as { token: string };
+
+      sessionStorage.setItem(SessionStorageKey.TOKEN, data.token);
+
+      await connect();
+    } finally {
+      setLoading(false);
+    }
+  }, [values.identity, values.password, setErrors]);
+
+  const onRegisterClick = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const url = getUrlFromServer();
+      const response = await fetch(`${url}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identity: values.identity,
+          password: values.password
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setErrors(data.errors || {});
+        return;
+      }
+
+      localStorage.setItem(LocalStorageKey.IDENTITY, values.identity);
+      toast.success(
+        'Registration successful! You can now connect to the server.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [values.identity, values.password, setErrors]);
+
+  const logoSrc = useMemo(() => {
+    if (info?.logo) {
+      return getFileUrl(info.logo);
+    }
+
+    return '/logo.webp';
+  }, [info]);
+
+  return (
+    <div className="flex flex-col gap-2 justify-center items-center h-full">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="flex justify-center">
+            <img src={logoSrc} alt="Sharkord" className="w-32 h-32" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {info?.description && (
+            <span className="text-sm text-muted-foreground">
+              {info?.description}
+            </span>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <Group label="Identity">
+              <Input {...r('identity')} />
+            </Group>
+            <Group label="Password">
+              <Input
+                {...r('password')}
+                type="password"
+                onEnter={onConnectClick}
+              />
+            </Group>
+            <Group label="Remember Identity">
+              <Switch
+                checked={values.rememberIdentity}
+                onCheckedChange={onRememberIdentityChange}
+              />
+            </Group>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={onConnectClick}
+              disabled={loading || !values.identity || !values.password}
+            >
+              Connect
+            </Button>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={onRegisterClick}
+              disabled={
+                loading ||
+                !values.identity ||
+                !values.password ||
+                !info?.allowNewUsers
+              }
+            >
+              Register
+            </Button>
+            <span className="text-xs text-muted-foreground text-center">
+              New user registration is disabled on this server.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+
+export { Connect };

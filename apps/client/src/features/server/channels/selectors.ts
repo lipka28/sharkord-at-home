@@ -1,0 +1,24 @@
+import type { IRootState } from '@/features/store';
+import { createSelector } from '@reduxjs/toolkit';
+
+export const channelsSelector = (state: IRootState) => state.server.channels;
+
+export const channelByIdSelector = createSelector(
+  [channelsSelector, (_, channelId: number) => channelId],
+  (channels, channelId) => channels.find((channel) => channel.id === channelId)
+);
+
+export const channelsByCategoryIdSelector = createSelector(
+  [channelsSelector, (_, categoryId: number) => categoryId],
+  (channels, categoryId) =>
+    channels.filter((channel) => channel.categoryId === categoryId)
+);
+
+export const selectedChannelIdSelector = (state: IRootState) =>
+  state.server.selectedChannelId;
+
+export const selectedChannelSelector = createSelector(
+  [channelsSelector, selectedChannelIdSelector],
+  (channels, selectedChannelId) =>
+    channels.find((channel) => channel.id === selectedChannelId)
+);

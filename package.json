@@ -1,0 +1,11 @@
+{
+  "name": "sharkord",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "trustedDependencies": [
+    "mediasoup"
+  ]
+}

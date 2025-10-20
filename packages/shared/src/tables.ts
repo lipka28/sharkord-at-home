@@ -1,0 +1,93 @@
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import {
+  settings,
+  roles,
+  categories,
+  channels,
+  files,
+  users,
+  logins,
+  messages,
+  messageFiles,
+  rolePermissions,
+  emojis,
+  notificationSounds,
+  messageReactions,
+} from "../../../apps/server/src/db/schema";
+import type { UserStatus } from "./types";
+import type { Permission } from "./statics";
+
+export type TSettings = InferSelectModel<typeof settings>;
+export type TRole = InferSelectModel<typeof roles>;
+export type TCategory = InferSelectModel<typeof categories>;
+export type TChannel = InferSelectModel<typeof channels>;
+export type TFile = InferSelectModel<typeof files>;
+export type TUser = InferSelectModel<typeof users>;
+export type TLogin = InferSelectModel<typeof logins>;
+export type TMessage = InferSelectModel<typeof messages>;
+export type TMessageFile = InferSelectModel<typeof messageFiles>;
+export type TRolePermission = InferSelectModel<typeof rolePermissions>;
+export type TEmoji = InferSelectModel<typeof emojis>;
+export type TNotificationSound = InferSelectModel<typeof notificationSounds>;
+export type TMessageReaction = InferSelectModel<typeof messageReactions>;
+
+export type TISettings = InferInsertModel<typeof settings>;
+export type TIRole = InferInsertModel<typeof roles>;
+export type TICategory = InferInsertModel<typeof categories>;
+export type TIChannel = InferInsertModel<typeof channels>;
+export type TIFile = InferInsertModel<typeof files>;
+export type TIUser = InferInsertModel<typeof users>;
+export type TILogin = InferInsertModel<typeof logins>;
+export type TIMessage = InferInsertModel<typeof messages>;
+export type TIMessageFile = InferInsertModel<typeof messageFiles>;
+export type TIRolePermission = InferInsertModel<typeof rolePermissions>;
+export type TIEmoji = InferInsertModel<typeof emojis>;
+export type TINotificationSound = InferInsertModel<typeof notificationSounds>;
+export type TIMessageReaction = InferInsertModel<typeof messageReactions>;
+
+// joined types
+
+type TPublicUser = Pick<
+  TJoinedUser,
+  | "id"
+  | "name"
+  | "roleId"
+  | "bannerColor"
+  | "bio"
+  | "avatar"
+  | "avatarId"
+  | "banner"
+  | "bannerId"
+  | "createdAt"
+> & {
+  status?: UserStatus;
+  _identity?: string;
+};
+
+export type TJoinedRole = TRole & {
+  permissions: Permission[];
+};
+
+export type TJoinedMessage = TMessage & {
+  files: TFile[];
+  reactions: TMessageReaction[];
+};
+
+export type TJoinedEmoji = TEmoji & {
+  file: TFile;
+  user: TPublicUser;
+};
+
+export type TJoinedUser = TUser & {
+  avatar: TFile | null;
+  banner: TFile | null;
+};
+
+export type TJoinedPublicUser = TPublicUser & {
+  avatar: TFile | null;
+  banner: TFile | null;
+};
+
+export type TJoinedSettings = TSettings & {
+  logo: TFile | null;
+};
