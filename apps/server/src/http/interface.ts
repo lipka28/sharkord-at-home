@@ -18,10 +18,13 @@ const interfaceRouteHandler = (
   let subPath = req.url || '/';
 
   const urlPart = subPath.split('?')[0];
+
   subPath = urlPart ? decodeURIComponent(urlPart) : '/';
   subPath = subPath === '/' ? 'index.html' : subPath;
 
-  const requestedPath = path.resolve(INTERFACE_PATH, subPath);
+  const cleanSubPath = subPath.startsWith('/') ? subPath.slice(1) : subPath;
+
+  const requestedPath = path.resolve(INTERFACE_PATH, cleanSubPath);
   const basePath = path.resolve(INTERFACE_PATH);
 
   if (!requestedPath.startsWith(basePath)) {

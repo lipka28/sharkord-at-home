@@ -68,6 +68,7 @@
     },
     "apps/server": {
       "name": "@sharkord/server",
+      "version": "0.0.0",
       "dependencies": {
         "@sharkord/shared": "workspace:*",
         "@trpc/server": "^11.6.0",
@@ -109,7 +110,7 @@
     },
     "packages/shared": {
       "name": "@sharkord/shared",
-      "version": "1.0.0",
+      "version": "0.0.0",
       "dependencies": {
         "drizzle-orm": "^0.44.6",
         "js-sha256": "^0.11.1",

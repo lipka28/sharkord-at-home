@@ -5,6 +5,7 @@ import './helpers/ensure-server-dirs';
 import { createServers } from './utils/create-servers';
 import { loadEmbeds } from './utils/embeds';
 import { IS_PRODUCTION, SERVER_VERSION } from './utils/env';
+import { printDebug } from './utils/print-debug';
 
 await loadEmbeds();
 await loadDb();
@@ -22,4 +23,4 @@ const message = [
 
 console.log('%s', message);
 
-// testing ci
+printDebug();

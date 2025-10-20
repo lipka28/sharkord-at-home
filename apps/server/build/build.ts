@@ -16,21 +16,14 @@ const { values } = parseArgs({
   options: {
     bump: {
       type: 'string',
-      default: 'patch'
+      default: 'none'
     }
   },
   strict: true,
   allowPositionals: true
 });
 
-if (!values.bump) {
-  console.error(
-    'Please provide a version bump type with --bump (major, minor, patch, none)'
-  );
-  process.exit(1);
-}
-
-if (values.bump !== 'none') {
+if (values.bump && values.bump !== 'none') {
   const newVersion = semver.inc(
     await getCurrentVersion(),
     values.bump as semver.ReleaseType

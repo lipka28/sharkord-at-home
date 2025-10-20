@@ -39,6 +39,8 @@ type TTarget = {
 };
 
 const compile = async ({ out, target }: TTarget) => {
+  const version = await getCurrentVersion();
+
   await Bun.build({
     entrypoints: [
       './src/index.ts',
@@ -51,7 +53,7 @@ const compile = async ({ out, target }: TTarget) => {
     },
     define: {
       SHARKORD_ENV: '"production"',
-      SHARKORD_BUILD_VERSION: '"1.1.1"',
+      SHARKORD_BUILD_VERSION: `"${version}"`,
       SHARKORD_BUILD_DATE: `"${new Date().toISOString()}"`
     }
   });
