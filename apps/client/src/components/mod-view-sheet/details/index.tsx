@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip } from '@/components/ui/tooltip';
+import { useRoleById } from '@/features/server/roles/hooks';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   Calendar,
   ClipboardList,
   Clock,
+  Diamond,
   Gavel,
   Globe,
   IdCard,
@@ -43,8 +45,9 @@ const Row = memo(({ icon, label, value, details }: TRowProps) => {
   );
 });
 
-const UserInformation = memo(() => {
+const Details = memo(() => {
   const { user, logins } = useModViewContext();
+  const role = useRoleById(user.roleId);
   const lastLogin = logins[0]; // TODO: in the future we might show a list of logins, atm we just show info about the last one
 
   return (
@@ -67,6 +70,12 @@ const UserInformation = memo(() => {
             icon={<IdCard className="h-4 w-4 text-muted-foreground" />}
             label="Identity"
             value={user.identity}
+          />
+
+          <Row
+            icon={<Diamond className="h-4 w-4 text-muted-foreground" />}
+            label="Role"
+            value={role?.name || 'Unknown'}
           />
 
           <Row
@@ -127,4 +136,4 @@ const UserInformation = memo(() => {
   );
 });
 
-export { UserInformation };
+export { Details };

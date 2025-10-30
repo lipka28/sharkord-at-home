@@ -1,19 +1,20 @@
 import { TiptapInput } from '@/components/tiptap-input';
 import Spinner from '@/components/ui/spinner';
 import { useMessages } from '@/features/server/messages/hooks';
-import { parseTrpcErrors } from '@/helpers/parse-trpc-errors';
+import { getTrpcError } from '@/helpers/parse-trpc-errors';
 import { useUploadFiles } from '@/hooks/use-upload-files';
 import { getTRPCClient } from '@/lib/trpc';
 import { TYPING_MS } from '@sharkord/shared';
 import { filesize } from 'filesize';
 import { throttle } from 'lodash-es';
 import { Send } from 'lucide-react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../../ui/button';
 import { FileCard } from './file-card';
 import { MessagesGroup } from './messages-group';
 import { TextSkeleton } from './text-skeleton';
+import { useScrollController } from './use-scroll-controller';
 import { UsersTyping } from './users-typing';
 
 type TChannelProps = {
@@ -26,8 +27,12 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
   const { messages, hasMore, loadMore, loading, groupedMessages } =
     useMessages(channelId);
   const [newMessage, setNewMessage] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
-  const hasInitialScroll = useRef(false);
+  const { containerRef, onScroll } = useScrollController({
+    messages,
+    loading,
+    hasMore,
+    loadMore
+  });
 
   const sendTypingSignal = useMemo(
     () =>
@@ -55,9 +60,7 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
         files: files.map((f) => f.id)
       });
     } catch (error) {
-      const { _general } = parseTrpcErrors(error);
-
-      toast.error(_general || 'Failed to send message');
+      toast.error(getTrpcError(error, 'Failed to send message'));
       return;
     }
 
@@ -66,62 +69,19 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
   }, [newMessage, channelId, files, clearFiles]);
 
   const onRemoveFileClick = useCallback(
-    (fileId: string) => {
+    async (fileId: string) => {
       removeFile(fileId);
 
       try {
         const trpc = getTRPCClient();
 
-        trpc.files.deleteTemporary.mutate({ fileId });
+        await trpc.files.deleteTemporary.mutate({ fileId });
       } catch {
         // ignore error
       }
     },
     [removeFile]
   );
-
-  // detect scroll-to-top and load more messages
-  const onScroll = useCallback(() => {
-    const container = containerRef.current;
-
-    if (!container || loading) return;
-
-    if (container.scrollTop <= 50 && hasMore) {
-      const prevScrollHeight = container.scrollHeight;
-
-      loadMore().then(() => {
-        const newScrollHeight = container.scrollHeight;
-        container.scrollTop =
-          newScrollHeight - prevScrollHeight + container.scrollTop;
-      });
-    }
-  }, [loadMore, hasMore, loading]);
-
-  // scroll to bottom on initial mount
-  useEffect(() => {
-    if (!containerRef.current) return;
-    if (messages.length === 0) return;
-
-    if (!hasInitialScroll.current) {
-      const container = containerRef.current;
-      container.scrollTop = container.scrollHeight;
-      hasInitialScroll.current = true;
-    }
-  }, [messages]);
-
-  // auto-scroll on new messages if user is near bottom
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || messages.length === 0) return;
-
-    // check scroll percentage
-    const scrollPosition = container.scrollTop + container.clientHeight;
-    const threshold = container.scrollHeight * 0.95;
-
-    if (scrollPosition >= threshold) {
-      container.scrollTop = container.scrollHeight;
-    }
-  }, [messages]);
 
   if (loading) {
     return <TextSkeleton />;

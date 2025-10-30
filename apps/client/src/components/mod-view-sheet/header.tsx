@@ -8,7 +8,7 @@ import { useOwnUserId, useUserStatus } from '@/features/server/users/hooks';
 import { getTrpcError } from '@/helpers/parse-trpc-errors';
 import { getTRPCClient } from '@/lib/trpc';
 import { UserStatus } from '@sharkord/shared';
-import { Gavel, Shield, UserMinus, VolumeX } from 'lucide-react';
+import { Gavel, Shield, UserMinus } from 'lucide-react';
 import { memo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useModViewContext } from './context';
@@ -123,14 +123,6 @@ const Header = memo(() => {
         >
           <Gavel className="h-4 w-4" />
           {user.banned ? 'Unban' : 'Ban'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={status === UserStatus.OFFLINE}
-        >
-          <VolumeX className="h-4 w-4" />
-          Timeout
         </Button>
         <Button variant="outline" size="sm">
           <Shield className="h-4 w-4" />

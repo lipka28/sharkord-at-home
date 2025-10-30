@@ -1,5 +1,6 @@
 import { FileCard } from '@/components/channel-view/text/file-card';
 import { requestConfirmation } from '@/features/dialogs/actions';
+import { downloadFile } from '@/helpers/download-file';
 import { getTrpcError } from '@/helpers/parse-trpc-errors';
 import { getTRPCClient } from '@/lib/trpc';
 import type { TFile } from '@sharkord/shared';
@@ -36,22 +37,25 @@ const Files = memo(() => {
     [refetch]
   );
 
-  const onDownloadClick = useCallback((_fileId: number) => {}, []);
+  const renderItem = useCallback(
+    (file: TFile) => (
+      <FileCard
+        name={file.originalName}
+        extension={file.extension}
+        size={file.size}
+        onRemove={() => onRemoveClick(file.id)}
+        onDownload={() => downloadFile(file)}
+      />
+    ),
+    [onRemoveClick]
+  );
 
-  const renderItem = useCallback((file: TFile) => (
-    <FileCard
-      name={file.originalName}
-      extension={file.extension}
-      size={file.size}
-      onRemove={() => onRemoveClick(file.id)}
-      onDownload={() => onDownloadClick(file.id)}
-    />
-  ), [onRemoveClick, onDownloadClick]);
-
-  const searchFilter = useCallback((file: TFile, term: string) =>
-    file.originalName.toLowerCase().includes(term.toLowerCase()) ||
-    file.extension.toLowerCase().includes(term.toLowerCase())
-  , []);
+  const searchFilter = useCallback(
+    (file: TFile, term: string) =>
+      file.originalName.toLowerCase().includes(term.toLowerCase()) ||
+      file.extension.toLowerCase().includes(term.toLowerCase()),
+    []
+  );
 
   return (
     <PaginatedList

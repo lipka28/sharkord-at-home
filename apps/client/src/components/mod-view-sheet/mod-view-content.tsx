@@ -2,12 +2,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { memo, useCallback } from 'react';
 import { ModViewScreen, useModViewContext } from './context';
+import { Details } from './details';
 import { Header } from './header';
 import { ServerActivity } from './server-activity';
 import { Files } from './server-activity/files';
 import { Links } from './server-activity/links';
 import { Messages } from './server-activity/messages';
-import { UserInformation } from './user-information';
 
 type TWrapperProps = {
   children: React.ReactNode;
@@ -68,7 +68,7 @@ const Routing = memo(({ view }: TRoutingProps) => {
   return (
     <>
       <ServerActivity />
-      <UserInformation />
+      <Details />
     </>
   );
 });
