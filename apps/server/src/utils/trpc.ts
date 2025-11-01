@@ -25,6 +25,7 @@ export type Context = {
   setWsUserId: (userId: number) => void;
   getUserWs: (userId: number) => WebSocket | undefined;
   getConnectionInfo: () => TConnectionInfo | undefined;
+  throwValidationError: (field: string, message: string) => never;
 };
 
 const t = initTRPC.context<Context>().create();

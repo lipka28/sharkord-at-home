@@ -130,7 +130,7 @@ const createWsServer = async (server: http.Server) => {
         const getConnectionInfo = () => {
           const ws = Array.from(wss.clients).find(
             (client) => client.token === token
-          ) as any;
+          );
 
           if (!ws) return undefined;
 
@@ -148,8 +148,21 @@ const createWsServer = async (server: http.Server) => {
           }
         };
 
+        const throwValidationError = (field: string, message: string) => {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: JSON.stringify([
+              {
+                code: 'custom',
+                path: [field],
+                message
+              }
+            ])
+          });
+        };
+
         return {
-          pubsub: pubsub,
+          pubsub,
           token,
           user: decodedUser,
           authenticated: false,
@@ -161,7 +174,8 @@ const createWsServer = async (server: http.Server) => {
           setWsUserId,
           needsPermission,
           getUserWs,
-          getConnectionInfo
+          getConnectionInfo,
+          throwValidationError
         };
       }
     });

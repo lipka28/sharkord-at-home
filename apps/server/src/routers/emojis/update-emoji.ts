@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { updateEmoji } from '../../db/mutations/emojis/update-emoji';
 import { publishEmojiUpdate } from '../../db/publishers';
+import { emojiExists } from '../../db/queries/emojis/emoji-exists';
 import { protectedProcedure } from '../../utils/trpc';
 
 const updateEmojiRoute = protectedProcedure
@@ -14,6 +15,15 @@ const updateEmojiRoute = protectedProcedure
   )
   .mutation(async ({ ctx, input }) => {
     await ctx.needsPermission(Permission.MANAGE_EMOJIS);
+
+    const exists = await emojiExists(input.name);
+
+    if (exists) {
+      ctx.throwValidationError(
+        'name',
+        'An emoji with this name already exists.'
+      );
+    }
 
     const updatedEmoji = await updateEmoji(input.emojiId, {
       name: input.name

@@ -7,7 +7,7 @@ import type { TFile } from '@sharkord/shared';
 import { memo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useModViewContext } from '../context';
-import { PaginatedList } from './paginated-list';
+import { PaginatedList } from '@/components/paginated-list';
 
 const Files = memo(() => {
   const { files, refetch } = useModViewContext();

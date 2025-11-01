@@ -1,8 +1,8 @@
+import { PaginatedList } from '@/components/paginated-list';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Link as LinkIcon } from 'lucide-react';
 import { memo, useCallback, useMemo } from 'react';
 import { useModViewContext } from '../context';
-import { PaginatedList } from './paginated-list';
 
 type TLinkCardProps = {
   url: string;

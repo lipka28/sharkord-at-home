@@ -135,9 +135,11 @@ const MessageReactions = memo(
             .join(', ');
 
           return (
-            <Tooltip content={tooltipContent}>
+            <Tooltip
+              content={tooltipContent}
+              key={`reaction-${reaction.emoji}`}
+            >
               <Button
-                key={`reaction-${reaction.emoji}`}
                 size="sm"
                 variant="outline"
                 onClick={() => handleReactionClick(reaction.emoji)}

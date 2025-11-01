@@ -168,9 +168,11 @@ const Connect = memo(() => {
             >
               Register
             </Button>
-            <span className="text-xs text-muted-foreground text-center">
-              New user registration is disabled on this server.
-            </span>
+            {!info?.allowNewUsers && (
+              <span className="text-xs text-muted-foreground text-center">
+                New user registration is disabled on this server.
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
