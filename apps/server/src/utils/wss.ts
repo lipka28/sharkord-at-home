@@ -19,6 +19,12 @@ import { pubsub } from './pubsub';
 
 let wss: WebSocketServer;
 
+const usersIpMap = new Map<number, string>();
+
+const getUserIp = (userId: number): string | undefined => {
+  return usersIpMap.get(userId);
+};
+
 const createWsServer = async (server: http.Server) => {
   return new Promise<WebSocketServer>((resolve) => {
     wss = new WebSocketServer({ server });
@@ -161,6 +167,10 @@ const createWsServer = async (server: http.Server) => {
           });
         };
 
+        const saveUserIp = async (userId: number, ip: string) => {
+          usersIpMap.set(userId, ip);
+        };
+
         return {
           pubsub,
           token,
@@ -175,7 +185,8 @@ const createWsServer = async (server: http.Server) => {
           needsPermission,
           getUserWs,
           getConnectionInfo,
-          throwValidationError
+          throwValidationError,
+          saveUserIp
         };
       }
     });
@@ -184,4 +195,4 @@ const createWsServer = async (server: http.Server) => {
   });
 };
 
-export { createWsServer };
+export { createWsServer, getUserIp };

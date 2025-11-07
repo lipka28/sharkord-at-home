@@ -1,6 +1,7 @@
-import { DisconnectCode, Permission } from '@sharkord/shared';
+import { ActivityLogType, DisconnectCode, Permission } from '@sharkord/shared';
 import { TRPCError } from '@trpc/server';
 import z from 'zod';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { protectedProcedure } from '../../utils/trpc';
 
 const kickRoute = protectedProcedure
@@ -23,6 +24,15 @@ const kickRoute = protectedProcedure
     }
 
     userWs.close(DisconnectCode.KICKED, input.reason);
+
+    enqueueActivityLog({
+      type: ActivityLogType.USER_KICKED,
+      userId: input.userId,
+      details: {
+        reason: input.reason,
+        kickedBy: ctx.userId
+      }
+    });
   });
 
 export { kickRoute };

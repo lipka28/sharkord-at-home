@@ -1,8 +1,9 @@
-import { DisconnectCode, Permission } from '@sharkord/shared';
+import { ActivityLogType, DisconnectCode, Permission } from '@sharkord/shared';
 import { TRPCError } from '@trpc/server';
 import z from 'zod';
 import { updateUser } from '../../db/mutations/users/update-user';
 import { publishUser } from '../../db/publishers';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { protectedProcedure } from '../../utils/trpc';
 
 const banRoute = protectedProcedure
@@ -35,6 +36,15 @@ const banRoute = protectedProcedure
     });
 
     publishUser(input.userId, 'update');
+
+    enqueueActivityLog({
+      type: ActivityLogType.USER_BANNED,
+      userId: input.userId,
+      details: {
+        reason: input.reason,
+        bannedBy: ctx.userId
+      }
+    });
   });
 
 export { banRoute };

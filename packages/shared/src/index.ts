@@ -7,3 +7,4 @@ export * from "./trpc";
 export * from "./helpers/index";
 export * from "./events";
 export * from "./extensions";
+export * from "./logs";

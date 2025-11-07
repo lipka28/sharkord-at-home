@@ -1,4 +1,5 @@
 import {
+  ActivityLogType,
   ServerEvents,
   UserStatus,
   type TPublicServerSettings
@@ -12,6 +13,7 @@ import { getRoles } from '../../db/queries/roles/get-roles';
 import { getPublicUsers } from '../../db/queries/users/get-public-users';
 import { categories, channels } from '../../db/schema';
 import { logger } from '../../logger';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { enqueueLogin } from '../../queues/logins';
 import { t } from '../../utils/trpc';
 
@@ -78,8 +80,18 @@ const joinServerRoute = t.procedure
       status: UserStatus.ONLINE
     });
 
+    const connectionInfo = ctx.getConnectionInfo();
+
+    if (connectionInfo?.ip) {
+      ctx.saveUserIp(ctx.user.id, connectionInfo.ip);
+    }
+
     updateUser(ctx.user.id, { lastLoginAt: Date.now() });
-    enqueueLogin(ctx.user.id, ctx.getConnectionInfo());
+    enqueueLogin(ctx.user.id, connectionInfo);
+    enqueueActivityLog({
+      type: ActivityLogType.USER_JOINED,
+      userId: ctx.user.id
+    });
 
     return {
       categories: allCategories,

@@ -1,4 +1,4 @@
-import { sha256, type TJoinedUser } from '@sharkord/shared';
+import { ActivityLogType, sha256, type TJoinedUser } from '@sharkord/shared';
 import http from 'http';
 import jwt from 'jsonwebtoken';
 import z from 'zod';
@@ -9,6 +9,7 @@ import { isInviteValid } from '../db/queries/invites/is-invite-valid';
 import { getServerToken } from '../db/queries/others/get-server-token';
 import { getSettings } from '../db/queries/others/get-settings';
 import { getUserByIdentity } from '../db/queries/users/get-user-by-identity';
+import { enqueueActivityLog } from '../queues/activity-log';
 import { getJsonBody } from './helpers';
 import { HttpValidationError } from './utils';
 
@@ -20,7 +21,8 @@ const zBody = z.object({
 
 const registerUser = async (
   identity: string,
-  password: string
+  password: string,
+  inviteCode?: string
 ): Promise<TJoinedUser> => {
   const hashedPassword = await sha256(password);
   const createdUser = await createUser(identity, hashedPassword);
@@ -32,6 +34,12 @@ const registerUser = async (
   if (!registeredUser) {
     throw new Error('User registration failed');
   }
+
+  enqueueActivityLog({
+    type: ActivityLogType.USER_CREATED,
+    userId: registeredUser.id,
+    details: { username: registeredUser.name, inviteCode }
+  });
 
   return registeredUser;
 };
@@ -74,7 +82,7 @@ const loginRouteHandler = async (
   }
 
   const token = jwt.sign({ userId: existingUser.id }, await getServerToken(), {
-    expiresIn: '31536000s' // 1 year
+    expiresIn: '86400s' // 1 day
   });
 
   res.writeHead(200, { 'Content-Type': 'application/json' });

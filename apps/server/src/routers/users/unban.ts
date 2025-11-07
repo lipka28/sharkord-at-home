@@ -1,7 +1,8 @@
-import { Permission } from '@sharkord/shared';
+import { ActivityLogType, Permission } from '@sharkord/shared';
 import z from 'zod';
 import { updateUser } from '../../db/mutations/users/update-user';
 import { publishUser } from '../../db/publishers';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { protectedProcedure } from '../../utils/trpc';
 
 const unbanRoute = protectedProcedure
@@ -19,6 +20,14 @@ const unbanRoute = protectedProcedure
     });
 
     publishUser(input.userId, 'update');
+
+    enqueueActivityLog({
+      type: ActivityLogType.USER_UNBANNED,
+      userId: input.userId,
+      details: {
+        unbannedBy: ctx.userId
+      }
+    });
   });
 
 export { unbanRoute };

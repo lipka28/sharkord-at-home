@@ -84,6 +84,8 @@ const createHttpServer = async () => {
             return;
           }
 
+          logger.error('HTTP route error:', error);
+
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Internal server error' }));
           return;

@@ -1,3 +1,13 @@
+CREATE TABLE `activity_log` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`userId` integer NOT NULL,
+	`type` text NOT NULL,
+	`details` text,
+	`ip` text,
+	`createdAt` integer NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `categories` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,

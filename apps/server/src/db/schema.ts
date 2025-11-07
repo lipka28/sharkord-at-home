@@ -3,6 +3,7 @@ import {
   STORAGE_MIN_QUOTA_PER_USER,
   STORAGE_QUOTA,
   StorageOverflowAction,
+  type TActivityLogDetailsMap,
   type TMessageMetadata
 } from '@sharkord/shared';
 import {
@@ -304,7 +305,21 @@ const invites = sqliteTable(
   })
 );
 
+const activityLog = sqliteTable('activity_log', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('userId')
+    .notNull()
+    .references(() => users.id),
+  type: text('type').notNull(),
+  details: text('details', { mode: 'json' }).$type<
+    TActivityLogDetailsMap[keyof TActivityLogDetailsMap]
+  >(),
+  ip: text('ip'),
+  createdAt: integer('createdAt').notNull()
+});
+
 export {
+  activityLog,
   categories,
   channels,
   emojis,

@@ -1,7 +1,8 @@
-import { StorageOverflowAction } from '@sharkord/shared';
+import { ActivityLogType, StorageOverflowAction } from '@sharkord/shared';
 import { z } from 'zod';
 import { updateSettings as updateSettingsMutation } from '../../db/mutations/server/update-server-settings';
 import { publishSettings } from '../../db/publishers';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { protectedProcedure } from '../../utils/trpc';
 
 const updateSettingsRoute = protectedProcedure
@@ -17,7 +18,7 @@ const updateSettingsRoute = protectedProcedure
       storageOverflowAction: z.enum(StorageOverflowAction).optional()
     })
   )
-  .mutation(async ({ input }) => {
+  .mutation(async ({ input, ctx }) => {
     await updateSettingsMutation({
       name: input.name,
       description: input.description,
@@ -30,6 +31,12 @@ const updateSettingsRoute = protectedProcedure
     });
 
     await publishSettings();
+
+    enqueueActivityLog({
+      type: ActivityLogType.EDIT_SERVER_SETTINGS,
+      userId: ctx.userId,
+      details: { values: input }
+    });
   });
 
 export { updateSettingsRoute };

@@ -1,7 +1,9 @@
 import './helpers/ensure-server-dirs';
+import { ActivityLogType } from '@sharkord/shared';
 import chalk from 'chalk';
 import { config, SERVER_PRIVATE_IP } from './config';
 import { loadDb } from './db';
+import { enqueueActivityLog } from './queues/activity-log';
 import { createServers } from './utils/create-servers';
 import { loadEmbeds } from './utils/embeds';
 import { IS_PRODUCTION, SERVER_VERSION } from './utils/env';
@@ -24,3 +26,7 @@ const message = [
 console.log('%s', message);
 
 printDebug();
+
+enqueueActivityLog({
+  type: ActivityLogType.SERVER_STARTED
+});

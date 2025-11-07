@@ -14,6 +14,7 @@ import {
   notificationSounds,
   messageReactions,
   invites,
+  activityLog,
 } from "../../../apps/server/src/db/schema";
 import type { UserStatus } from "./types";
 import type { Permission } from "./statics";
@@ -32,6 +33,7 @@ export type TEmoji = InferSelectModel<typeof emojis>;
 export type TNotificationSound = InferSelectModel<typeof notificationSounds>;
 export type TMessageReaction = InferSelectModel<typeof messageReactions>;
 export type TInvite = InferSelectModel<typeof invites>;
+export type TActivityLog = InferSelectModel<typeof activityLog>;
 
 export type TISettings = InferInsertModel<typeof settings>;
 export type TIRole = InferInsertModel<typeof roles>;
@@ -47,6 +49,7 @@ export type TIEmoji = InferInsertModel<typeof emojis>;
 export type TINotificationSound = InferInsertModel<typeof notificationSounds>;
 export type TIMessageReaction = InferInsertModel<typeof messageReactions>;
 export type TIInvite = InferInsertModel<typeof invites>;
+export type TIActivityLog = InferInsertModel<typeof activityLog>;
 
 export type TStorageSettings = Pick<
   TSettings,
