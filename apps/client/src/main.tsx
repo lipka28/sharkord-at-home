@@ -2,7 +2,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { StoreDebug } from './components/debug/store-debug.tsx';
 import { DialogsProvider } from './components/dialogs/index.tsx';
 import { Routing } from './components/routing/index.tsx';
 import { ServerScreensProvider } from './components/server-screens/index.tsx';
@@ -19,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
     >
       <Toaster />
       <Provider store={store}>
-        <StoreDebug />
+        {/* <StoreDebug /> */}
         <DialogsProvider />
         <ServerScreensProvider />
         <Routing />
