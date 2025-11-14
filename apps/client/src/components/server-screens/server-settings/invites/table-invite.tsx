@@ -26,7 +26,6 @@ type TTableInviteProps = {
 const TableInvite = memo(({ invite, refetch }: TTableInviteProps) => {
   const isExpired = invite.expiresAt && invite.expiresAt < Date.now();
   const isMaxUsesReached = invite.maxUses && invite.uses >= invite.maxUses;
-  const isInactive = isExpired || isMaxUsesReached;
 
   const handleCopyCode = useCallback(() => {
     const inviteUrl = `${getUrlFromServer()}/?invite=${invite.code}`;

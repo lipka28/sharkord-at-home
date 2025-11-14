@@ -9,6 +9,7 @@ import type {
   TPublicServerSettings,
   TServerInfo,
   TUser,
+  TVoiceMap,
   TVoiceUserState
 } from '@sharkord/shared';
 import type { TDisconnectInfo, TMessagesMap } from './types';
@@ -33,13 +34,7 @@ export interface IServerState {
   typingMap: {
     [channelId: number]: number[];
   };
-  voice: {
-    [channelId: number]: {
-      users: {
-        [userId: number]: TVoiceUserState;
-      };
-    };
-  };
+  voiceMap: TVoiceMap;
   ownVoiceState: TVoiceUserState;
 }
 
@@ -61,7 +56,7 @@ const initialState: IServerState = {
   info: undefined,
   loadingInfo: false,
   typingMap: {},
-  voice: {},
+  voiceMap: {},
   ownVoiceState: {
     micMuted: false,
     soundMuted: false,
@@ -127,6 +122,7 @@ export const serverSlice = createSlice({
         roles: TJoinedRole[];
         emojis: TJoinedEmoji[];
         publicSettings: TPublicServerSettings | undefined;
+        voiceMap: TVoiceMap;
       }>
     ) => {
       state.connected = true;
@@ -137,6 +133,7 @@ export const serverSlice = createSlice({
       state.ownUser = action.payload.ownUser;
       state.roles = action.payload.roles;
       state.publicSettings = action.payload.publicSettings;
+      state.voiceMap = action.payload.voiceMap;
     },
     addMessages: (
       state,
@@ -387,11 +384,11 @@ export const serverSlice = createSlice({
     ) => {
       const { channelId, userId, state: userState } = action.payload;
 
-      if (!state.voice[channelId]) {
-        state.voice[channelId] = { users: {} };
+      if (!state.voiceMap[channelId]) {
+        state.voiceMap[channelId] = { users: {} };
       }
 
-      state.voice[channelId].users[userId] = userState;
+      state.voiceMap[channelId].users[userId] = userState;
     },
     removeUserFromVoiceChannel: (
       state,
@@ -399,9 +396,9 @@ export const serverSlice = createSlice({
     ) => {
       const { channelId, userId } = action.payload;
 
-      if (!state.voice[channelId]) return;
+      if (!state.voiceMap[channelId]) return;
 
-      delete state.voice[channelId].users[userId];
+      delete state.voiceMap[channelId].users[userId];
     },
     updateVoiceUserState: (
       state,
@@ -413,11 +410,11 @@ export const serverSlice = createSlice({
     ) => {
       const { channelId, userId, newState } = action.payload;
 
-      if (!state.voice[channelId]) return;
-      if (!state.voice[channelId].users[userId]) return;
+      if (!state.voiceMap[channelId]) return;
+      if (!state.voiceMap[channelId].users[userId]) return;
 
-      state.voice[channelId].users[userId] = {
-        ...state.voice[channelId].users[userId],
+      state.voiceMap[channelId].users[userId] = {
+        ...state.voiceMap[channelId].users[userId],
         ...newState
       };
     },

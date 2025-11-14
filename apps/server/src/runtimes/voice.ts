@@ -3,6 +3,7 @@ import {
   type TChannelState,
   type TRemoteProducerIds,
   type TTransportParams,
+  type TVoiceMap,
   type TVoiceUserState
 } from '@sharkord/shared';
 import type {
@@ -122,6 +123,26 @@ class VoiceRuntime {
     }
 
     return undefined;
+  };
+
+  public static getVoiceMap = (): TVoiceMap => {
+    const map: TVoiceMap = {};
+
+    voiceRuntimes.forEach((runtime, channelId) => {
+      map[channelId] = {
+        users: {}
+      };
+
+      runtime.getState().users.forEach((user) => {
+        if (!map[channelId]) {
+          map[channelId] = { users: {} };
+        }
+
+        map[channelId].users[user.userId] = user.state;
+      });
+    });
+
+    return map;
   };
 
   public init = async (): Promise<void> => {

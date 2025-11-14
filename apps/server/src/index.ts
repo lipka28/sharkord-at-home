@@ -1,8 +1,8 @@
-import './helpers/ensure-server-dirs';
-import { config, SERVER_PRIVATE_IP } from './config';
 import { ActivityLogType } from '@sharkord/shared';
 import chalk from 'chalk';
+import { config, SERVER_PRIVATE_IP } from './config';
 import { loadDb } from './db';
+import './helpers/ensure-server-dirs';
 import { enqueueActivityLog } from './queues/activity-log';
 import { initVoiceRuntimes } from './runtimes';
 import { createServers } from './utils/create-servers';

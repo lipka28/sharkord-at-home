@@ -4,7 +4,9 @@ import { useSelector } from 'react-redux';
 const StoreDebug = () => {
   const server = useSelector((state: IRootState) => state.server);
 
-  console.log('# State server ', server);
+  if (window.DEBUG) {
+    console.log('# State server ', server);
+  }
 
   return null;
 };

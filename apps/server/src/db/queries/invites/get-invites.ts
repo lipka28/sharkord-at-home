@@ -2,7 +2,7 @@ import type { TJoinedInvite } from '@sharkord/shared';
 import { eq } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { db } from '../..';
-import { invites, files, users } from '../../schema';
+import { files, invites, users } from '../../schema';
 
 const getInvites = async (): Promise<TJoinedInvite[]> => {
   const avatarFiles = alias(files, 'avatarFiles');

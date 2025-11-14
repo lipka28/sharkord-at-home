@@ -29,3 +29,16 @@ export enum Resolution {
   '360p' = '360p',
   '240p' = '240p'
 }
+
+export type TDeviceSettings = {
+  microphoneId: string | undefined;
+  webcamId: string | undefined;
+  webcamResolution: Resolution;
+  webcamFramerate: number;
+  echoCancellation: boolean;
+  noiseSuppression: boolean;
+  autoGainControl: boolean;
+  shareSystemAudio: boolean;
+  screenResolution: Resolution;
+  screenFramerate: number;
+};

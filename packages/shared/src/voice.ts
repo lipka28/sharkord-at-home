@@ -23,5 +23,13 @@ export type TTransportParams = {
   dtlsParameters: any;
 };
 
+export type TVoiceMap = {
+  [channelId: number]: {
+    users: {
+      [userId: number]: TVoiceUserState;
+    };
+  };
+};
+
 // export type not available in the client, so we export it here
 export type { RtpCapabilities } from "mediasoup/types";

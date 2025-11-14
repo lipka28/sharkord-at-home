@@ -15,6 +15,7 @@ import { categories, channels } from '../../db/schema';
 import { logger } from '../../logger';
 import { enqueueActivityLog } from '../../queues/activity-log';
 import { enqueueLogin } from '../../queues/logins';
+import { VoiceRuntime } from '../../runtimes/voice';
 import { t } from '../../utils/trpc';
 
 const joinServerRoute = t.procedure
@@ -86,6 +87,8 @@ const joinServerRoute = t.procedure
       ctx.saveUserIp(ctx.user.id, connectionInfo.ip);
     }
 
+    const voiceMap = VoiceRuntime.getVoiceMap();
+
     updateUser(ctx.user.id, { lastLoginAt: Date.now() });
     enqueueLogin(ctx.user.id, connectionInfo);
     enqueueActivityLog({
@@ -99,6 +102,7 @@ const joinServerRoute = t.procedure
       users: processedPublicUsers,
       serverId: settings.serverId,
       serverName: settings.name,
+      voiceMap,
       ownUser: {
         ...ctx.user,
         identity: ''

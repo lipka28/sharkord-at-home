@@ -2,6 +2,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
+import { DebugInfo } from './components/debug-info/index.tsx';
+import { StoreDebug } from './components/debug/store-debug.tsx';
+import { DevicesProvider } from './components/devices-provider/index.tsx';
 import { DialogsProvider } from './components/dialogs/index.tsx';
 import { Routing } from './components/routing/index.tsx';
 import { ServerScreensProvider } from './components/server-screens/index.tsx';
@@ -16,12 +19,15 @@ createRoot(document.getElementById('root')!).render(
       defaultTheme="dark"
       storageKey={LocalStorageKey.VITE_UI_THEME}
     >
+      <DebugInfo />
       <Toaster />
       <Provider store={store}>
-        {/* <StoreDebug /> */}
-        <DialogsProvider />
-        <ServerScreensProvider />
-        <Routing />
+        <StoreDebug />
+        <DevicesProvider>
+          <DialogsProvider />
+          <ServerScreensProvider />
+          <Routing />
+        </DevicesProvider>
       </Provider>
     </ThemeProvider>
   </StrictMode>

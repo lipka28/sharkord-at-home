@@ -58,18 +58,8 @@ const ServerScreensProvider = memo(() => {
       close: closeServerScreens
     };
 
-    // For CHANNEL_SETTINGS, ensure channelId is present
-    if (openServerScreen === ServerScreen.CHANNEL_SETTINGS) {
-      if (typeof props?.channelId === 'number') {
-        component = createElement(ChannelSettings, {
-          ...baseProps,
-          channelId: props.channelId
-        });
-      }
-    } else {
-      // For other screens that don't require additional props
-      component = createElement(ScreensMap[openServerScreen], baseProps);
-    }
+    // @ts-expect-error - é lidar irmoum
+    component = createElement(ScreensMap[openServerScreen], baseProps);
   }
 
   const realIsOpen = isOpen && !!component;

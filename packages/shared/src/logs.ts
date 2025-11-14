@@ -1,4 +1,4 @@
-import type { TChannel, TEmoji, TRole, TSettings } from "./tables";
+import type { TChannel, TRole, TSettings } from "./tables";
 import type { ChannelType } from "./types";
 
 export enum ActivityLogType {

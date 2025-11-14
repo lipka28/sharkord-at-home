@@ -18,6 +18,8 @@ import { logger } from '../logger';
 import { enqueueActivityLog } from '../queues/activity-log';
 import { appRouter } from '../routers';
 import { VoiceRuntime } from '../runtimes/voice';
+// this needs to be here because of tsc weirdness, check this in the future (when check-types on client it spits server errors)
+import '../types/websocket';
 import { pubsub } from './pubsub';
 
 let wss: WebSocketServer;

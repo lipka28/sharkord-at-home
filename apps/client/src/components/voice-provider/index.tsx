@@ -1,3 +1,4 @@
+import { getResWidthHeight } from '@/helpers/get-res-with-height';
 import { getTRPCClient } from '@/lib/trpc';
 import { StreamKind, type RtpCapabilities } from '@sharkord/shared';
 import { Device } from 'mediasoup-client';
@@ -10,6 +11,7 @@ import {
   useRef,
   useState
 } from 'react';
+import { useDevices } from '../devices-provider/hooks/use-devices';
 import { logVoice } from './helpers';
 import { useLocalStreams } from './hooks/use-local-streams';
 import { useRemoteStreams } from './hooks/use-remote-streams';
@@ -71,8 +73,6 @@ const VoiceProviderContext = createContext<TVoiceProvider>({
   remoteStreams: {}
 });
 
-export { VoiceProviderContext };
-
 type TVoiceProviderProps = {
   children: React.ReactNode;
 };
@@ -83,6 +83,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     ConnectionStatus.DISCONNECTED
   );
   const routerRtpCapabilities = useRef<RtpCapabilities | null>(null);
+  const { devices } = useDevices();
 
   const {
     addRemoteStream,
@@ -127,11 +128,14 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
+          deviceId: {
+            ideal: devices.microphoneId
+          },
+          autoGainControl: devices.autoGainControl,
+          echoCancellation: devices.echoCancellation,
+          noiseSuppression: devices.noiseSuppression,
           sampleRate: 48000,
-          channelCount: 2,
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
+          channelCount: 2
         },
         video: false
       });
@@ -189,7 +193,11 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     producerTransport,
     setLocalAudioStream,
     localAudioProducer,
-    localAudioStream
+    localAudioStream,
+    devices.microphoneId,
+    devices.autoGainControl,
+    devices.echoCancellation,
+    devices.noiseSuppression
   ]);
 
   const startWebcamStream = useCallback(async () => {
@@ -198,7 +206,11 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: true
+        video: {
+          deviceId: { ideal: devices?.webcamId },
+          frameRate: devices.webcamFramerate,
+          ...getResWidthHeight(devices?.webcamResolution)
+        }
       });
 
       logVoice('Webcam stream obtained', { stream });
@@ -254,7 +266,10 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     setLocalVideoStream,
     localVideoProducer,
     producerTransport,
-    localVideoStream
+    localVideoStream,
+    devices.webcamId,
+    devices.webcamFramerate,
+    devices.webcamResolution
   ]);
 
   const stopWebcamStream = useCallback(() => {
@@ -295,9 +310,10 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          frameRate: 60
+          ...getResWidthHeight(devices?.screenResolution),
+          frameRate: devices?.screenFramerate
         },
-        audio: true
+        audio: false
       });
 
       logVoice('Screen share stream obtained', { stream });
@@ -351,7 +367,9 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     setLocalScreenShare,
     localScreenShareProducer,
     producerTransport,
-    localScreenShareStream
+    localScreenShareStream,
+    devices.screenResolution,
+    devices.screenFramerate
   ]);
 
   const init = useCallback(
@@ -507,4 +525,4 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
   );
 });
 
-export { VoiceProvider };
+export { VoiceProvider, VoiceProviderContext };

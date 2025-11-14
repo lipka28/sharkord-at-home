@@ -28,7 +28,7 @@ const ServerActivity = memo(() => {
           </span>
         </div>
 
-        <div 
+        <div
           className="flex items-center justify-between py-1.5 px-1 hover:bg-muted/30 rounded cursor-pointer"
           onClick={() => setView(ModViewScreen.LINKS)}
         >

@@ -1,4 +1,5 @@
 import { FileCard } from '@/components/channel-view/text/file-card';
+import { PaginatedList } from '@/components/paginated-list';
 import { requestConfirmation } from '@/features/dialogs/actions';
 import { downloadFile } from '@/helpers/download-file';
 import { getTrpcError } from '@/helpers/parse-trpc-errors';
@@ -7,7 +8,6 @@ import type { TFile } from '@sharkord/shared';
 import { memo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useModViewContext } from '../context';
-import { PaginatedList } from '@/components/paginated-list';
 
 const Files = memo(() => {
   const { files, refetch } = useModViewContext();

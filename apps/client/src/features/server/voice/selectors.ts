@@ -4,7 +4,7 @@ export const voiceChannelStateSelector = (
   state: IRootState,
   channelId: number
 ) => {
-  return state.server.voice[channelId];
+  return state.server.voiceMap[channelId];
 };
 
 export const ownVoiceStateSelector = (state: IRootState) => {
