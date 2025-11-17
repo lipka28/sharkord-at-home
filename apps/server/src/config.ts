@@ -39,7 +39,7 @@ let config: TConfig = {
   mediasoup: {
     worker: {
       rtcMinPort: 40000,
-      rtcMaxPort: 40200
+      rtcMaxPort: 40020
     }
   }
 };

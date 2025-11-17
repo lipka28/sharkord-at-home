@@ -55,6 +55,7 @@ const Connect = memo(() => {
 
   const onConnectClick = useCallback(async () => {
     setLoading(true);
+
     try {
       const url = getUrlFromServer();
       const response = await fetch(`${url}/login`, {
@@ -178,15 +179,22 @@ const Connect = memo(() => {
 
       <div className="flex justify-center gap-2 text-xs text-muted-foreground select-none">
         <span>v{VITE_APP_VERSION}</span>
-        <span className="text-xs">
-          <a
-            href="https://github.com/Sharkord/sharkord"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-          </a>
-        </span>
+        <a
+          href="https://github.com/sharkord/sharkord"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+        </a>
+
+        <a
+          className="text-xs"
+          href="https://sharkord.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Sharkord
+        </a>
       </div>
     </div>
   );
