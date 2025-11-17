@@ -20,8 +20,12 @@ export type TransportStatsData = {
   totalBytesSent: number;
   currentBitrateSent: number;
   currentBitrateReceived: number;
+  averageBitrateSent: number;
+  averageBitrateReceived: number;
   isMonitoring: boolean;
 };
+
+const SMOOTHING_WINDOW = 5; // Number of samples for moving average
 
 const useTransportStats = () => {
   const [stats, setStats] = useState<TransportStatsData>({
@@ -31,6 +35,8 @@ const useTransportStats = () => {
     totalBytesSent: 0,
     currentBitrateSent: 0,
     currentBitrateReceived: 0,
+    averageBitrateSent: 0,
+    averageBitrateReceived: 0,
     isMonitoring: false
   });
 
@@ -45,6 +51,10 @@ const useTransportStats = () => {
     consumer: null
   });
 
+  // Rolling windows for smoothing bitrate
+  const bitrateSentHistoryRef = useRef<number[]>([]);
+  const bitrateReceivedHistoryRef = useRef<number[]>([]);
+
   const parseTransportStats = useCallback(
     (
       statsReport: RTCStatsReport,
@@ -58,26 +68,20 @@ const useTransportStats = () => {
       let rtt = 0;
       let jitter = 0;
 
-      for (const [, stat] of statsReport) {
-        if (stat.type === 'outbound-rtp') {
-          // only count outbound stats for producer transports
-          if (isProducer) {
-            bytesSent += stat.bytesSent || 0;
-            packetsSent += stat.packetsSent || 0;
-          }
-        } else if (stat.type === 'inbound-rtp') {
-          // only count inbound stats for consumer transports
-          if (!isProducer) {
-            bytesReceived += stat.bytesReceived || 0;
-            packetsReceived += stat.packetsReceived || 0;
-            packetsLost += stat.packetsLost || 0;
-            jitter += stat.jitter || 0;
-          }
+      for (const stat of statsReport.values()) {
+        if (stat.type === 'outbound-rtp' && isProducer) {
+          bytesSent += stat.bytesSent || 0;
+          packetsSent += stat.packetsSent || 0;
+        } else if (stat.type === 'inbound-rtp' && !isProducer) {
+          bytesReceived += stat.bytesReceived || 0;
+          packetsReceived += stat.packetsReceived || 0;
+          packetsLost += stat.packetsLost || 0;
+          jitter += stat.jitter || 0;
         } else if (
           stat.type === 'candidate-pair' &&
           stat.state === 'succeeded'
         ) {
-          rtt = stat.currentRoundTripTime * 1000 || 0; // convert to ms
+          rtt = (stat.currentRoundTripTime || 0) * 1000;
         }
       }
 
@@ -122,24 +126,64 @@ const useTransportStats = () => {
       const previousConsumer = previousStatsRef.current.consumer;
 
       const bytesReceivedDelta =
-        (consumerStats?.bytesReceived || 0) -
-        (previousConsumer?.bytesReceived || 0);
+        consumerStats && previousConsumer
+          ? consumerStats.bytesReceived - previousConsumer.bytesReceived
+          : 0;
 
       const bytesSentDelta =
-        (producerStats?.bytesSent || 0) - (previousProducer?.bytesSent || 0);
+        producerStats && previousProducer
+          ? producerStats.bytesSent - previousProducer.bytesSent
+          : 0;
 
-      const timeDelta =
-        previousProducer?.timestamp || previousConsumer?.timestamp
-          ? (Date.now() -
-              (previousProducer?.timestamp ||
-                previousConsumer?.timestamp ||
-                0)) /
-            1000
-          : 1;
+      let currentBitrateSent = 0;
+      let currentBitrateReceived = 0;
 
-      const currentBitrateSent = timeDelta > 0 ? bytesSentDelta / timeDelta : 0;
-      const currentBitrateReceived =
-        timeDelta > 0 ? bytesReceivedDelta / timeDelta : 0;
+      if (producerStats && previousProducer && bytesSentDelta > 0) {
+        const timeDeltaSent =
+          (producerStats.timestamp - previousProducer.timestamp) / 1000;
+
+        if (timeDeltaSent > 0) {
+          currentBitrateSent = bytesSentDelta / timeDeltaSent;
+        }
+      }
+
+      if (consumerStats && previousConsumer && bytesReceivedDelta > 0) {
+        const timeDeltaReceived =
+          (consumerStats.timestamp - previousConsumer.timestamp) / 1000;
+
+        if (timeDeltaReceived > 0) {
+          currentBitrateReceived = bytesReceivedDelta / timeDeltaReceived;
+        }
+      }
+
+      if (currentBitrateSent > 0) {
+        bitrateSentHistoryRef.current.push(currentBitrateSent);
+
+        if (bitrateSentHistoryRef.current.length > SMOOTHING_WINDOW) {
+          bitrateSentHistoryRef.current.shift();
+        }
+      }
+
+      if (currentBitrateReceived > 0) {
+        bitrateReceivedHistoryRef.current.push(currentBitrateReceived);
+
+        if (bitrateReceivedHistoryRef.current.length > SMOOTHING_WINDOW) {
+          bitrateReceivedHistoryRef.current.shift();
+        }
+      }
+
+      // Calculate moving averages
+      const averageBitrateSent =
+        bitrateSentHistoryRef.current.length > 0
+          ? bitrateSentHistoryRef.current.reduce((a, b) => a + b, 0) /
+            bitrateSentHistoryRef.current.length
+          : 0;
+
+      const averageBitrateReceived =
+        bitrateReceivedHistoryRef.current.length > 0
+          ? bitrateReceivedHistoryRef.current.reduce((a, b) => a + b, 0) /
+            bitrateReceivedHistoryRef.current.length
+          : 0;
 
       setStats((prev) => ({
         producer: producerStats,
@@ -148,6 +192,8 @@ const useTransportStats = () => {
         totalBytesSent: prev.totalBytesSent + bytesSentDelta,
         currentBitrateSent,
         currentBitrateReceived,
+        averageBitrateSent,
+        averageBitrateReceived,
         isMonitoring: true
       }));
 
@@ -174,9 +220,8 @@ const useTransportStats = () => {
       }
 
       if (producerTransport || consumerTransport) {
-        intervalRef.current = setInterval(collectStats, intervalMs);
-
         collectStats();
+        intervalRef.current = setInterval(collectStats, intervalMs);
       }
     },
     [collectStats]
@@ -204,6 +249,8 @@ const useTransportStats = () => {
       totalBytesSent: 0,
       currentBitrateSent: 0,
       currentBitrateReceived: 0,
+      averageBitrateSent: 0,
+      averageBitrateReceived: 0,
       isMonitoring: false
     });
 
@@ -211,6 +258,9 @@ const useTransportStats = () => {
       producer: null,
       consumer: null
     };
+
+    bitrateSentHistoryRef.current = [];
+    bitrateReceivedHistoryRef.current = [];
 
     logVoice('Transport stats reset');
   }, []);

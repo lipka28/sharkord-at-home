@@ -55,7 +55,9 @@ const VoiceProviderContext = createContext<TVoiceProvider>({
     totalBytesSent: 0,
     isMonitoring: false,
     currentBitrateReceived: 0,
-    currentBitrateSent: 0
+    currentBitrateSent: 0,
+    averageBitrateReceived: 0,
+    averageBitrateSent: 0
   },
   init: () => Promise.resolve(),
   toggleMic: () => Promise.resolve(),
