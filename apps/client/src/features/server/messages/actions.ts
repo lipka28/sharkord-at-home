@@ -1,6 +1,9 @@
 import { store } from '@/features/store';
 import { TYPING_MS, type TJoinedMessage } from '@sharkord/shared';
 import { serverSliceActions } from '../slice';
+import { playSound } from '../sounds/actions';
+import { SoundType } from '../types';
+import { ownUserIdSelector } from '../users/selectors';
 
 const typingTimeouts: { [key: string]: NodeJS.Timeout } = {};
 
@@ -10,13 +13,25 @@ const getTypingKey = (channelId: number, userId: number) =>
 export const addMessages = (
   channelId: number,
   messages: TJoinedMessage[],
-  opts: { prepend?: boolean } = {}
+  opts: { prepend?: boolean } = {},
+  isSubscriptionMessage = false
 ) => {
   store.dispatch(serverSliceActions.addMessages({ channelId, messages, opts }));
 
   messages.forEach((message) => {
     removeTypingUser(channelId, message.userId);
   });
+
+  if (isSubscriptionMessage && messages.length > 0) {
+    const state = store.getState();
+    const ownUserId = ownUserIdSelector(state);
+    const targetMessage = messages[0];
+    const isFromOwnUser = ownUserId === targetMessage.userId;
+
+    if (!isFromOwnUser) {
+      playSound(SoundType.MESSAGE_RECEIVED);
+    }
+  }
 };
 
 export const updateMessage = (channelId: number, message: TJoinedMessage) => {

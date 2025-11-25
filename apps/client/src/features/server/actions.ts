@@ -8,7 +8,7 @@ import { store } from '../store';
 import { infoSelector } from './selectors';
 import { serverSliceActions } from './slice';
 import { initSubscriptions } from './subscriptions';
-import type { TDisconnectInfo } from './types';
+import { type TDisconnectInfo } from './types';
 
 export const setConnected = (status: boolean) => {
   store.dispatch(serverSliceActions.setConnected(status));

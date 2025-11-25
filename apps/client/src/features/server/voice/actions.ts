@@ -13,25 +13,48 @@ import {
   selectedChannelIdSelector
 } from '../channels/selectors';
 import { serverSliceActions } from '../slice';
+import { playSound } from '../sounds/actions';
+import { SoundType } from '../types';
+import { ownUserIdSelector } from '../users/selectors';
 import { ownVoiceStateSelector } from './selectors';
 
 export const addUserToVoiceChannel = (
   userId: number,
   channelId: number,
-  state: TVoiceUserState
+  voiceState: TVoiceUserState
 ): void => {
+  const state = store.getState();
+  const ownUserId = ownUserIdSelector(state);
+  const currentChannelId = currentVoiceChannelIdSelector(state);
+
   store.dispatch(
-    serverSliceActions.addUserToVoiceChannel({ userId, channelId, state })
+    serverSliceActions.addUserToVoiceChannel({
+      userId,
+      channelId,
+      state: voiceState
+    })
   );
+
+  if (userId !== ownUserId && channelId === currentChannelId) {
+    playSound(SoundType.REMOTE_USER_JOINED_VOICE_CHANNEL);
+  }
 };
 
 export const removeUserFromVoiceChannel = (
   userId: number,
   channelId: number
 ): void => {
+  const state = store.getState();
+  const ownUserId = ownUserIdSelector(state);
+  const currentChannelId = currentVoiceChannelIdSelector(state);
+
   store.dispatch(
     serverSliceActions.removeUserFromVoiceChannel({ userId, channelId })
   );
+
+  if (userId !== ownUserId && channelId === currentChannelId) {
+    playSound(SoundType.REMOTE_USER_LEFT_VOICE_CHANNEL);
+  }
 };
 
 export const updateVoiceUserState = (
@@ -104,6 +127,7 @@ export const leaveVoice = async (): Promise<void> => {
 
   try {
     await client.voice.leave.mutate();
+    playSound(SoundType.OWN_USER_LEFT_VOICE_CHANNEL);
   } catch (error) {
     toast.error(getTrpcError(error, 'Failed to leave voice channel'));
   }

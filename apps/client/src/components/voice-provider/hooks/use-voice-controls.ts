@@ -1,4 +1,6 @@
 import { useCurrentVoiceChannelId } from '@/features/server/channels/hooks';
+import { playSound } from '@/features/server/sounds/actions';
+import { SoundType } from '@/features/server/types';
 import { updateOwnVoiceState } from '@/features/server/voice/actions';
 import { useOwnVoiceState } from '@/features/server/voice/hooks';
 import { getTrpcError } from '@/helpers/parse-trpc-errors';
@@ -33,6 +35,9 @@ const useVoiceControls = ({
     const trpc = getTRPCClient();
 
     updateOwnVoiceState({ micMuted: newState });
+    playSound(
+      newState ? SoundType.OWN_USER_MUTED_MIC : SoundType.OWN_USER_UNMUTED_MIC
+    );
 
     if (!currentVoiceChannelId) return;
 
@@ -63,6 +68,11 @@ const useVoiceControls = ({
     const trpc = getTRPCClient();
 
     updateOwnVoiceState({ soundMuted: newState });
+    playSound(
+      newState
+        ? SoundType.OWN_USER_MUTED_SOUND
+        : SoundType.OWN_USER_UNMUTED_SOUND
+    );
 
     if (!currentVoiceChannelId) return;
 
@@ -82,6 +92,12 @@ const useVoiceControls = ({
     const trpc = getTRPCClient();
 
     updateOwnVoiceState({ webcamEnabled: newState });
+
+    playSound(
+      newState
+        ? SoundType.OWN_USER_STARTED_WEBCAM
+        : SoundType.OWN_USER_STOPPED_WEBCAM
+    );
 
     try {
       await trpc.voice.updateState.mutate({
@@ -108,6 +124,12 @@ const useVoiceControls = ({
     const trpc = getTRPCClient();
 
     updateOwnVoiceState({ sharingScreen: newState });
+
+    playSound(
+      newState
+        ? SoundType.OWN_USER_STARTED_SCREENSHARE
+        : SoundType.OWN_USER_STOPPED_SCREENSHARE
+    );
 
     try {
       await trpc.voice.updateState.mutate({

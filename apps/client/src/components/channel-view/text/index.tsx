@@ -2,6 +2,8 @@ import { TiptapInput } from '@/components/tiptap-input';
 import Spinner from '@/components/ui/spinner';
 import { useCan } from '@/features/server/hooks';
 import { useMessages } from '@/features/server/messages/hooks';
+import { playSound } from '@/features/server/sounds/actions';
+import { SoundType } from '@/features/server/types';
 import { getTrpcError } from '@/helpers/parse-trpc-errors';
 import { useUploadFiles } from '@/hooks/use-upload-files';
 import { getTRPCClient } from '@/lib/trpc';
@@ -63,6 +65,8 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
         channelId,
         files: files.map((f) => f.id)
       });
+
+      playSound(SoundType.MESSAGE_SENT);
     } catch (error) {
       toast.error(getTrpcError(error, 'Failed to send message'));
       return;

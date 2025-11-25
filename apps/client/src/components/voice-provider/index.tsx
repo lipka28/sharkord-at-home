@@ -1,3 +1,5 @@
+import { playSound } from '@/features/server/sounds/actions';
+import { SoundType } from '@/features/server/types';
 import { getResWidthHeight } from '@/helpers/get-res-with-height';
 import { getTRPCClient } from '@/lib/trpc';
 import { StreamKind, type RtpCapabilities } from '@sharkord/shared';
@@ -405,6 +407,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
         startMonitoring(producerTransport.current, consumerTransport.current);
         setConnectionStatus(ConnectionStatus.CONNECTED);
         setLoading(false);
+        playSound(SoundType.OWN_USER_JOINED_VOICE_CHANNEL);
       } catch (error) {
         logVoice('Error initializing voice provider', { error });
         setConnectionStatus(ConnectionStatus.FAILED);
