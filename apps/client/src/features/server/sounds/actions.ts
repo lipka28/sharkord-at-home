@@ -1,6 +1,7 @@
 import { SoundType } from '../types';
 
 const audioCtx = new (window.AudioContext ||
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).webkitAudioContext)();
 
 const now = () => audioCtx.currentTime;
