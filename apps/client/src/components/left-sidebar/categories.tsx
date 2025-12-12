@@ -6,6 +6,7 @@ import {
 import { Permission } from '@sharkord/shared';
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
+import { CategoryContextMenu } from '../context-menus/category';
 import { Dialog } from '../dialogs/dialogs';
 import { Protect } from '../protect';
 import { IconButton } from '../ui/icon-button';
@@ -30,7 +31,7 @@ const Category = memo(({ categoryId }: TCategoryProps) => {
   const ChevronIcon = expanded ? ChevronDown : ChevronRight;
 
   return (
-    <div key={category.id} className="mb-4">
+    <div className="mb-4">
       <div className="mb-1 flex w-full items-center px-2 py-1 text-xs font-semibold text-muted-foreground">
         <div className="flex w-full items-center gap-1">
           <IconButton
@@ -40,7 +41,9 @@ const Category = memo(({ categoryId }: TCategoryProps) => {
             onClick={() => setExpanded((v) => !v)}
             title={expanded ? 'Collapse category' : 'Expand category'}
           />
-          <span>{category.name}</span>
+          <CategoryContextMenu categoryId={category.id}>
+            <span>{category.name}</span>
+          </CategoryContextMenu>
         </div>
 
         <Protect permission={Permission.MANAGE_CHANNELS}>

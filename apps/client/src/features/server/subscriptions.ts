@@ -1,6 +1,7 @@
 import { getTRPCClient } from '@/lib/trpc';
 import { type TSettings } from '@sharkord/shared';
 import { setPublicServerSettings } from './actions';
+import { subscribeToCategories } from './categories/subscriptions';
 import { subscribeToChannels } from './channels/subscriptions';
 import { subscribeToEmojis } from './emojis/subscriptions';
 import { subscribeToMessages } from './messages/subscriptions';
@@ -43,6 +44,7 @@ const initSubscriptions = () => {
   subscribeToUsers();
   subscribeToMessages();
   subscribeToVoice();
+  subscribeToCategories();
 };
 
 export { initSubscriptions };

@@ -2,6 +2,7 @@
 import type {
   ServerEvents,
   StreamKind,
+  TCategory,
   TChannel,
   TJoinedEmoji,
   TJoinedMessage,
@@ -71,6 +72,10 @@ type Events = {
   [ServerEvents.ROLE_DELETE]: number;
 
   [ServerEvents.SERVER_SETTINGS_UPDATE]: TSettings;
+
+  [ServerEvents.CATEGORY_CREATE]: TCategory;
+  [ServerEvents.CATEGORY_UPDATE]: TCategory;
+  [ServerEvents.CATEGORY_DELETE]: number;
 };
 
 class PubSub {

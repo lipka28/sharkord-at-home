@@ -88,9 +88,6 @@ export const serverSlice = createSlice({
     setServerId: (state, action: PayloadAction<string | undefined>) => {
       state.serverId = action.payload;
     },
-    setCategories: (state, action: PayloadAction<TCategory[]>) => {
-      state.categories = action.payload;
-    },
     setInfo: (state, action: PayloadAction<TServerInfo | undefined>) => {
       state.info = action.payload;
     },
@@ -372,6 +369,42 @@ export const serverSlice = createSlice({
     removeEmoji: (state, action: PayloadAction<{ emojiId: number }>) => {
       state.emojis = state.emojis.filter(
         (e) => e.id !== action.payload.emojiId
+      );
+    },
+
+    // CATEGORIES ------------------------------------------------------------
+
+    setCategories: (state, action: PayloadAction<TCategory[]>) => {
+      state.categories = action.payload;
+    },
+    addCategory: (state, action: PayloadAction<TCategory>) => {
+      const exists = state.categories.find((c) => c.id === action.payload.id);
+
+      if (exists) return;
+
+      state.categories.push(action.payload);
+    },
+    updateCategory: (
+      state,
+      action: PayloadAction<{
+        categoryId: number;
+        category: Partial<TCategory>;
+      }>
+    ) => {
+      const index = state.categories.findIndex(
+        (c) => c.id === action.payload.categoryId
+      );
+
+      if (index === -1) return;
+
+      state.categories[index] = {
+        ...state.categories[index],
+        ...action.payload.category
+      };
+    },
+    removeCategory: (state, action: PayloadAction<{ categoryId: number }>) => {
+      state.categories = state.categories.filter(
+        (c) => c.id !== action.payload.categoryId
       );
     },
 

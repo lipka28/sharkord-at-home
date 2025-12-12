@@ -7,6 +7,7 @@ import {
   STORAGE_OVERFLOW_ACTION,
   STORAGE_QUOTA,
   StorageOverflowAction,
+  type TCategory,
   type TChannel,
   type TDiskMetrics,
   type TFile,
@@ -136,6 +137,60 @@ export const useAdminChannelGeneral = (channelId: number) => {
   return {
     channel,
     refetch: fetchChannel,
+    loading,
+    errors,
+    onChange,
+    submit
+  };
+};
+
+export const useAdminCategoryGeneral = (categoryId: number) => {
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<TTrpcErrors>({});
+  const [category, setCategory] = useState<TCategory | undefined>(undefined);
+
+  const fetchCategory = useCallback(async () => {
+    setLoading(true);
+
+    const trpc = getTRPCClient();
+    const category = await trpc.categories.get.query({ categoryId });
+
+    setCategory(category);
+    setLoading(false);
+  }, [categoryId]);
+
+  const submit = useCallback(async () => {
+    const trpc = getTRPCClient();
+
+    try {
+      await trpc.categories.update.mutate({
+        categoryId,
+        name: category?.name ?? ''
+      });
+
+      toast.success('Category updated');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      setErrors(parseTrpcErrors(error));
+    }
+  }, [category, categoryId]);
+
+  const onChange = useCallback(
+    (field: keyof TCategory, value: string | null) => {
+      if (!category) return;
+      setCategory((c) => (c ? { ...c, [field]: value } : c));
+      setErrors((e) => ({ ...e, [field]: undefined }));
+    },
+    [category]
+  );
+
+  useEffect(() => {
+    fetchCategory();
+  }, [fetchCategory]);
+
+  return {
+    category,
+    refetch: fetchCategory,
     loading,
     errors,
     onChange,

@@ -6,12 +6,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { openDialog } from '@/features/dialogs/actions';
 import { openServerScreen } from '@/features/server-screens/actions';
 import { useServerName } from '@/features/server/hooks';
 import { disconnect } from '@/lib/trpc';
 import { Permission } from '@sharkord/shared';
 import { Menu } from 'lucide-react';
 import { memo } from 'react';
+import { Dialog } from '../dialogs/dialogs';
 import { Protect } from '../protect';
 import { ServerScreen } from '../server-screens/screens';
 import { Button } from '../ui/button';
@@ -38,11 +40,19 @@ const LeftSidebar = memo(() => {
               <DropdownMenuSeparator />
               <Protect permission={Permission.MANAGE_SERVER}>
                 <DropdownMenuItem
-                  onClick={() => openServerScreen(ServerScreen.SERVER_SETTINGS)}
+                  onClick={() => openDialog(Dialog.CREATE_CATEGORY)}
                 >
-                  Settings
+                  Add Category
                 </DropdownMenuItem>
               </Protect>
+              <Protect permission={Permission.MANAGE_SERVER}>
+                <DropdownMenuItem
+                  onClick={() => openServerScreen(ServerScreen.SERVER_SETTINGS)}
+                >
+                  Server Settings
+                </DropdownMenuItem>
+              </Protect>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={disconnect}>
                 Disconnect
               </DropdownMenuItem>

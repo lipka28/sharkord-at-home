@@ -28,6 +28,10 @@ export enum ActivityLogType {
   CREATED_EMOJI = "CREATED_EMOJI",
   DELETED_EMOJI = "DELETED_EMOJI",
   UPDATED_EMOJI = "UPDATED_EMOJI",
+  // -------------------- CATEGORIES --------------------
+  CREATED_CATEGORY = "CREATED_CATEGORY",
+  DELETED_CATEGORY = "DELETED_CATEGORY",
+  UPDATED_CATEGORY = "UPDATED_CATEGORY",
 }
 
 export type TActivityLogDetailsMap = {
@@ -113,6 +117,22 @@ export type TActivityLogDetailsMap = {
   [ActivityLogType.UPDATED_EMOJI]: {
     fromName: string;
     toName: string;
+  };
+  // -------------------- CATEGORIES --------------------
+  [ActivityLogType.CREATED_CATEGORY]: {
+    categoryId: number;
+    categoryName: string;
+  };
+  [ActivityLogType.DELETED_CATEGORY]: {
+    categoryId: number;
+    categoryName: string;
+  };
+  [ActivityLogType.UPDATED_CATEGORY]: {
+    categoryId: number;
+    values: Partial<{
+      name: string;
+      position: number;
+    }>;
   };
 };
 

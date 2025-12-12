@@ -3,6 +3,7 @@ import { useDialogInfo } from '@/features/dialogs/hooks';
 import { createElement, memo } from 'react';
 import { ChangeRoleDialog } from './change-role';
 import ConfirmActionDialog from './confirm-action';
+import { CreateCategoryDialog } from './create-category';
 import { CreateChannelDialog } from './create-channel';
 import { CreateInviteDialog } from './create-invite-dialog';
 import { Dialog } from './dialogs';
@@ -16,7 +17,8 @@ const DialogsMap: any = {
   [Dialog.TEXT_INPUT]: TextInputDialog,
   [Dialog.SERVER_PASSWORD]: ServerPasswordDialog,
   [Dialog.CHANGE_ROLE]: ChangeRoleDialog,
-  [Dialog.CREATE_INVITE]: CreateInviteDialog
+  [Dialog.CREATE_INVITE]: CreateInviteDialog,
+  [Dialog.CREATE_CATEGORY]: CreateCategoryDialog
 };
 
 const DialogsProvider = memo(() => {

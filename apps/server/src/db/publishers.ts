@@ -1,4 +1,6 @@
 import { ServerEvents } from '@sharkord/shared';
+import { eq } from 'drizzle-orm';
+import { db } from '.';
 import { pubsub } from '../utils/pubsub';
 import { getChannel } from './queries/channels/get-channel';
 import { getEmojiById } from './queries/emojis/get-emoji-by-id';
@@ -6,6 +8,7 @@ import { getMessage } from './queries/messages/get-message';
 import { getSettings } from './queries/others/get-settings';
 import { getRole } from './queries/roles/get-role';
 import { getPublicUserById } from './queries/users/get-public-user-by-id';
+import { categories } from './schema';
 
 const publishMessage = async (
   messageId: number | undefined,
@@ -122,7 +125,35 @@ const publishSettings = async () => {
   pubsub.publish(ServerEvents.SERVER_SETTINGS_UPDATE, settings);
 };
 
+const publishCategory = async (
+  categoryId: number | undefined,
+  type: 'create' | 'update' | 'delete'
+) => {
+  if (!categoryId) return;
+
+  if (type === 'delete') {
+    pubsub.publish(ServerEvents.CATEGORY_DELETE, categoryId);
+    return;
+  }
+
+  const category = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.id, categoryId))
+    .get();
+
+  if (!category) return;
+
+  const targetEvent =
+    type === 'create'
+      ? ServerEvents.CATEGORY_CREATE
+      : ServerEvents.CATEGORY_UPDATE;
+
+  pubsub.publish(targetEvent, category);
+};
+
 export {
+  publishCategory,
   publishChannel,
   publishEmoji,
   publishMessage,
