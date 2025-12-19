@@ -82,7 +82,6 @@ type Events = {
 
 class PubSub {
   private ee: EventEmitter;
-  // Map to track userId -> topic -> Set of listeners for targeted events
   private userListeners: Map<
     number,
     Map<string, Set<(data: Events[keyof Events]) => void>>
@@ -101,12 +100,6 @@ class PubSub {
     this.ee.emit(topic, payload);
   }
 
-  /**
-   * Publish an event to specific user(s) only
-   * @param userIds - Single userId or array of userIds to publish to
-   * @param topic - The event topic
-   * @param payload - The event payload
-   */
   public publishFor<TTopic extends keyof Events>(
     userIds: number | number[],
     topic: TTopic,
@@ -116,9 +109,11 @@ class PubSub {
 
     for (const userId of targetUserIds) {
       const userTopics = this.userListeners.get(userId);
+
       if (!userTopics) continue;
 
       const listeners = userTopics.get(topic);
+
       if (!listeners) continue;
 
       for (const listener of listeners) {
@@ -149,12 +144,6 @@ class PubSub {
     });
   }
 
-  /**
-   * Subscribe to an event for a specific user
-   * This allows user-specific event filtering
-   * @param userId - The user ID to subscribe for
-   * @param topic - The event topic
-   */
   public subscribeFor<TTopic extends keyof Events>(
     userId: number,
     topic: TTopic
@@ -164,19 +153,16 @@ class PubSub {
         observer.next(data);
       };
 
-      // Initialize user listeners map if needed
       if (!this.userListeners.has(userId)) {
         this.userListeners.set(userId, new Map());
       }
 
       const userTopics = this.userListeners.get(userId)!;
 
-      // Initialize topic listeners set if needed
       if (!userTopics.has(topic)) {
         userTopics.set(topic, new Set());
       }
 
-      // Type assertion needed due to generic constraint limitations
       userTopics
         .get(topic)!
         .add(listener as (data: Events[keyof Events]) => void);
@@ -184,17 +170,19 @@ class PubSub {
       const unsubscribable: Unsubscribable = {
         unsubscribe: () => {
           const userTopics = this.userListeners.get(userId);
+
           if (!userTopics) return;
 
           const listeners = userTopics.get(topic);
+
           if (!listeners) return;
 
           listeners.delete(listener as (data: Events[keyof Events]) => void);
 
-          // Cleanup: remove empty sets/maps
           if (listeners.size === 0) {
             userTopics.delete(topic);
           }
+
           if (userTopics.size === 0) {
             this.userListeners.delete(userId);
           }

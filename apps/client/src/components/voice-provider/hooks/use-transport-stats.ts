@@ -267,7 +267,6 @@ const useTransportStats = () => {
       intervalRef.current = null;
     }
 
-    // Clear transport refs to prevent stale references
     producerTransportRef.current = null;
     consumerTransportRef.current = null;
 
