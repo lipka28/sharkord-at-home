@@ -1,7 +1,9 @@
 import { useCurrentVoiceChannelId } from '@/features/server/channels/hooks';
+import { useChannelCan } from '@/features/server/hooks';
 import { leaveVoice } from '@/features/server/voice/actions';
 import { useVoice } from '@/features/server/voice/hooks';
 import { cn } from '@/lib/utils';
+import { ChannelPermission } from '@sharkord/shared';
 import {
   AlertTriangle,
   Loader2,
@@ -20,6 +22,7 @@ import { StatsPopover } from './stats-popover';
 
 const VoiceControl = memo(() => {
   const voiceChannelId = useCurrentVoiceChannelId();
+  const channelCan = useChannelCan(voiceChannelId);
   const { ownVoiceState, toggleWebcam, toggleScreenShare, connectionStatus } =
     useVoice();
 
@@ -92,6 +95,7 @@ const VoiceControl = memo(() => {
                   ? 'Turn off camera'
                   : 'Turn on camera'
               }
+              disabled={!channelCan(ChannelPermission.WEBCAM)}
             >
               {ownVoiceState.webcamEnabled ? (
                 <Video className="h-4 w-4" />
@@ -115,6 +119,7 @@ const VoiceControl = memo(() => {
                   ? 'Stop screen share'
                   : 'Start screen share'
               }
+              disabled={!channelCan(ChannelPermission.SHARE_SCREEN)}
             >
               {ownVoiceState.sharingScreen ? (
                 <Monitor className="h-4 w-4" />

@@ -23,7 +23,7 @@ import { VoiceRuntime } from '../runtimes/voice';
 // import '../types/websocket';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { getChannelUserPermissions } from '../db/queries/channels';
+import { getAllChannelUserPermissions } from '../db/queries/channels';
 import { getUserById, getUserByToken } from '../db/queries/users';
 import { channels } from '../db/schema';
 import { getUserRoles } from '../routers/users/get-user-roles';
@@ -107,13 +107,14 @@ const createContext = async ({
 
     if (hasOwnerRole) return true; // owner always has all permissions
 
-    const userChannelPermissions = await getChannelUserPermissions(
+    const userChannelPermissions = await getAllChannelUserPermissions(
       decodedUser.id
     );
 
     const channelInfo = userChannelPermissions[channelId];
 
     if (!channelInfo) return false;
+    if (!channelInfo.permissions[ChannelPermission.VIEW_CHANNEL]) return false;
 
     return channelInfo.permissions[targetPermission] === true;
   };

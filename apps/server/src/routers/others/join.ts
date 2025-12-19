@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { db } from '../../db';
 import {
   getChannelsForUser,
-  getChannelUserPermissions
+  getAllChannelUserPermissions
 } from '../../db/queries/channels';
 import { getEmojis } from '../../db/queries/emojis';
 import { getRoles } from '../../db/queries/roles';
@@ -61,7 +61,7 @@ const joinServerRoute = t.procedure
       getPublicUsers(true), // return identity to get status of already connected users
       getRoles(),
       getEmojis(),
-      getChannelUserPermissions(ctx.user.id)
+      getAllChannelUserPermissions(ctx.user.id)
     ]);
 
     const processedPublicUsers = publicUsers.map((u) => ({

@@ -39,6 +39,7 @@ export const useCan = () => {
   const ownUserRoles = useOwnUserRoles();
   const isOwner = useIsOwnUserOwner();
 
+  // TODO: maybe this can can recieve both Permission and ChannelPermission?
   const can = useCallback(
     (permission: Permission | Permission[]) => {
       if (isOwner) return true;
@@ -63,14 +64,17 @@ export const useCan = () => {
   return can;
 };
 
-export const useChannelCan = (channelId: number) => {
-  const ownUserRoles = useChannelPermissionsById(channelId);
+export const useChannelCan = (channelId: number | undefined) => {
+  const ownUserRoles = useChannelPermissionsById(channelId || -1);
   const isOwner = useIsOwnUserOwner();
-  const channel = useChannelById(channelId);
+  const channel = useChannelById(channelId || -1);
 
   const can = useCallback(
     (permission: ChannelPermission) => {
-      if (isOwner || !channel?.private) return true;
+      if (isOwner || !channel || !channel?.private) return true;
+
+      // if VIEW is false, no other permission matters
+      if (ownUserRoles[ChannelPermission.VIEW_CHANNEL] === false) return false;
 
       return ownUserRoles[permission] === true;
     },

@@ -1,5 +1,6 @@
 import { getTRPCClient } from '@/lib/trpc';
 import { StreamKind } from '@sharkord/shared';
+import { TRPCClientError } from '@trpc/client';
 import {
   type AppData,
   type Consumer,
@@ -113,6 +114,19 @@ const useTransports = ({
 
             callback({ id: producerId });
           } catch (error) {
+            if (error instanceof TRPCClientError) {
+              if (error.data.code === 'FORBIDDEN') {
+                logVoice('Permission denied to produce track', { kind });
+                errback(
+                  new Error(
+                    `You don't have permission to ${kind} in this channel`
+                  )
+                );
+
+                return;
+              }
+            }
+
             logVoice('Error producing new track', { error });
             errback(error as Error);
           }

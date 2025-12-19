@@ -1,7 +1,10 @@
 import { openServerScreen } from '@/features/server-screens/actions';
+import { useCurrentVoiceChannelId } from '@/features/server/channels/hooks';
+import { useChannelCan } from '@/features/server/hooks';
 import { useOwnPublicUser } from '@/features/server/users/hooks';
 import { useVoice } from '@/features/server/voice/hooks';
 import { cn } from '@/lib/utils';
+import { ChannelPermission } from '@sharkord/shared';
 import { HeadphoneOff, Headphones, Mic, MicOff, Settings } from 'lucide-react';
 import { memo, useCallback } from 'react';
 import { ServerScreen } from '../server-screens/screens';
@@ -11,7 +14,9 @@ import { UserPopover } from '../user-popover';
 
 const UserControl = memo(() => {
   const ownPublicUser = useOwnPublicUser();
+  const currentVoiceChannelId = useCurrentVoiceChannelId();
   const { ownVoiceState, toggleMic, toggleSound } = useVoice();
+  const channelCan = useChannelCan(currentVoiceChannelId);
 
   const handleSettingsClick = useCallback(() => {
     openServerScreen(ServerScreen.USER_SETTINGS);
@@ -57,6 +62,7 @@ const UserControl = memo(() => {
               ? 'Unmute microphone (Ctrl+Shift+M)'
               : 'Mute microphone (Ctrl+Shift+M)'
           }
+          disabled={!channelCan(ChannelPermission.SPEAK)}
         >
           {ownVoiceState.micMuted ? (
             <MicOff className="h-4 w-4" />

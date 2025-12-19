@@ -195,7 +195,6 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       }
     } catch (error) {
       logVoice('Error starting microphone stream', { error });
-      throw error;
     }
   }, [
     producerTransport,

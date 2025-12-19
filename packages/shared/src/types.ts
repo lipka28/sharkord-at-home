@@ -106,7 +106,9 @@ export type TIpInfo = {
   timezone: string;
 };
 
+export type TChannelPermissionsMap = Record<ChannelPermission, boolean>;
+
 export type TChannelUserPermissionsMap = Record<
   number,
-  { channelId: number; permissions: Record<ChannelPermission, boolean> }
+  { channelId: number; permissions: TChannelPermissionsMap }
 >;

@@ -5,6 +5,7 @@ import { deletePermissionsRoute } from './delete-permissions';
 import {
   onChannelCreateRoute,
   onChannelDeleteRoute,
+  onChannelPermissionsUpdateRoute,
   onChannelUpdateRoute
 } from './events';
 import { getChannelRoute } from './get-channel';
@@ -24,5 +25,6 @@ export const channelsRouter = t.router({
   reorder: reorderChannelsRoute,
   onCreate: onChannelCreateRoute,
   onDelete: onChannelDeleteRoute,
-  onUpdate: onChannelUpdateRoute
+  onUpdate: onChannelUpdateRoute,
+  onPermissionsUpdate: onChannelPermissionsUpdateRoute
 });

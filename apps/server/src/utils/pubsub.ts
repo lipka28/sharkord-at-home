@@ -4,6 +4,7 @@ import type {
   StreamKind,
   TCategory,
   TChannel,
+  TChannelUserPermissionsMap,
   TJoinedEmoji,
   TJoinedMessage,
   TJoinedPublicUser,
@@ -36,6 +37,7 @@ type Events = {
   [ServerEvents.CHANNEL_CREATE]: TChannel;
   [ServerEvents.CHANNEL_UPDATE]: TChannel;
   [ServerEvents.CHANNEL_DELETE]: number;
+  [ServerEvents.CHANNEL_PERMISSIONS_UPDATE]: TChannelUserPermissionsMap;
 
   [ServerEvents.USER_JOIN_VOICE]: {
     channelId: number;
@@ -80,6 +82,11 @@ type Events = {
 
 class PubSub {
   private ee: EventEmitter;
+  // Map to track userId -> topic -> Set of listeners for targeted events
+  private userListeners: Map<
+    number,
+    Map<string, Set<(data: Events[keyof Events]) => void>>
+  > = new Map();
 
   constructor() {
     this.ee = new EventEmitter();
@@ -92,6 +99,32 @@ class PubSub {
     payload: Events[TTopic]
   ): void {
     this.ee.emit(topic, payload);
+  }
+
+  /**
+   * Publish an event to specific user(s) only
+   * @param userIds - Single userId or array of userIds to publish to
+   * @param topic - The event topic
+   * @param payload - The event payload
+   */
+  public publishFor<TTopic extends keyof Events>(
+    userIds: number | number[],
+    topic: TTopic,
+    payload: Events[TTopic]
+  ): void {
+    const targetUserIds = Array.isArray(userIds) ? userIds : [userIds];
+
+    for (const userId of targetUserIds) {
+      const userTopics = this.userListeners.get(userId);
+      if (!userTopics) continue;
+
+      const listeners = userTopics.get(topic);
+      if (!listeners) continue;
+
+      for (const listener of listeners) {
+        listener(payload);
+      }
+    }
   }
 
   public subscribe<TTopic extends keyof Events>(
@@ -109,6 +142,62 @@ class PubSub {
       const unsubscribable: Unsubscribable = {
         unsubscribe() {
           ee.off(topic, listener);
+        }
+      };
+
+      return unsubscribable;
+    });
+  }
+
+  /**
+   * Subscribe to an event for a specific user
+   * This allows user-specific event filtering
+   * @param userId - The user ID to subscribe for
+   * @param topic - The event topic
+   */
+  public subscribeFor<TTopic extends keyof Events>(
+    userId: number,
+    topic: TTopic
+  ): Observable<Events[TTopic], unknown> {
+    return observable((observer) => {
+      const listener = (data: Events[TTopic]) => {
+        observer.next(data);
+      };
+
+      // Initialize user listeners map if needed
+      if (!this.userListeners.has(userId)) {
+        this.userListeners.set(userId, new Map());
+      }
+
+      const userTopics = this.userListeners.get(userId)!;
+
+      // Initialize topic listeners set if needed
+      if (!userTopics.has(topic)) {
+        userTopics.set(topic, new Set());
+      }
+
+      // Type assertion needed due to generic constraint limitations
+      userTopics
+        .get(topic)!
+        .add(listener as (data: Events[keyof Events]) => void);
+
+      const unsubscribable: Unsubscribable = {
+        unsubscribe: () => {
+          const userTopics = this.userListeners.get(userId);
+          if (!userTopics) return;
+
+          const listeners = userTopics.get(topic);
+          if (!listeners) return;
+
+          listeners.delete(listener as (data: Events[keyof Events]) => void);
+
+          // Cleanup: remove empty sets/maps
+          if (listeners.size === 0) {
+            userTopics.delete(topic);
+          }
+          if (userTopics.size === 0) {
+            this.userListeners.delete(userId);
+          }
         }
       };
 

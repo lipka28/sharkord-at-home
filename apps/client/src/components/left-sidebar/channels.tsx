@@ -8,6 +8,7 @@ import {
 } from '@/features/server/channels/hooks';
 import {
   useCan,
+  useChannelCan,
   useTypingUsersByChannelId,
   useVoiceUsersByChannelId
 } from '@/features/server/hooks';
@@ -30,7 +31,12 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChannelType, Permission, type TChannel } from '@sharkord/shared';
+import {
+  ChannelPermission,
+  ChannelType,
+  Permission,
+  type TChannel
+} from '@sharkord/shared';
 import { Hash, Volume2 } from 'lucide-react';
 import { memo, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -94,6 +100,7 @@ type TItemWrapperProps = {
   onClick: () => void;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
   style?: React.CSSProperties;
+  disabled?: boolean;
 };
 
 const ItemWrapper = memo(
@@ -103,7 +110,8 @@ const ItemWrapper = memo(
     onClick,
     className,
     dragHandleProps,
-    style
+    style,
+    disabled = false
   }: TItemWrapperProps) => {
     return (
       <div
@@ -112,11 +120,13 @@ const ItemWrapper = memo(
         className={cn(
           'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground select-none cursor-pointer',
           {
-            'bg-accent text-accent-foreground': isSelected
+            'bg-accent text-accent-foreground': isSelected,
+            'cursor-default opacity-50 hover:bg-transparent hover:text-muted-foreground':
+              disabled
           },
           className
         )}
-        onClick={onClick}
+        onClick={disabled ? undefined : onClick}
       >
         {children}
       </div>
@@ -132,6 +142,7 @@ type TChannelProps = {
 const Channel = memo(({ channelId, isSelected }: TChannelProps) => {
   const channel = useChannelById(channelId);
   const currentVoiceChannelId = useCurrentVoiceChannelId();
+  const channelCan = useChannelCan(channelId);
   const { init } = useVoice();
 
   const {
@@ -198,6 +209,7 @@ const Channel = memo(({ channelId, isSelected }: TChannelProps) => {
               isSelected={isSelected}
               onClick={onClick}
               dragHandleProps={{ ...attributes, ...listeners }}
+              disabled={!channelCan(ChannelPermission.JOIN)}
             />
           )}
         </div>

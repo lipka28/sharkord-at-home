@@ -20,6 +20,7 @@ export enum ActivityLogType {
   CREATED_CHANNEL = "CREATED_CHANNEL",
   DELETED_CHANNEL = "DELETED_CHANNEL",
   UPDATED_CHANNEL = "UPDATED_CHANNEL",
+  UPDATED_CHANNEL_PERMISSIONS = "UPDATED_CHANNEL_PERMISSIONS",
   // -------------------- INVITES --------------------
   CREATED_INVITE = "CREATED_INVITE",
   DELETED_INVITE = "DELETED_INVITE",
@@ -94,6 +95,15 @@ export type TActivityLogDetailsMap = {
   [ActivityLogType.UPDATED_CHANNEL]: {
     channelId: number;
     values: Partial<TChannel>;
+  };
+  [ActivityLogType.UPDATED_CHANNEL_PERMISSIONS]: {
+    channelId: number;
+    targetUserId?: number;
+    targetRoleId?: number;
+    permissions: {
+      permission: string;
+      allow: boolean;
+    }[];
   };
   // -------------------- INVITES --------------------
   [ActivityLogType.CREATED_INVITE]: {

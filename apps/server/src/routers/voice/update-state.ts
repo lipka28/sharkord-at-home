@@ -1,4 +1,4 @@
-import { Permission, ServerEvents } from '@sharkord/shared';
+import { ChannelPermission, Permission, ServerEvents } from '@sharkord/shared';
 import { z } from 'zod';
 import { VoiceRuntime } from '../../runtimes/voice';
 import { invariant } from '../../utils/invariant';
@@ -21,6 +21,35 @@ const updateVoiceStateRoute = protectedProcedure
       message: 'User is not in a voice channel'
     });
 
+    const validatedInput = { ...input };
+
+    const [canSpeak, canUseWebcam, canShareScreen] = await Promise.all([
+      ctx.hasChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.SPEAK
+      ),
+      ctx.hasChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.WEBCAM
+      ),
+      ctx.hasChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.SHARE_SCREEN
+      )
+    ]);
+
+    if (!canSpeak) {
+      delete validatedInput.micMuted;
+    }
+
+    if (!canUseWebcam) {
+      delete validatedInput.webcamEnabled;
+    }
+
+    if (!canShareScreen) {
+      delete validatedInput.sharingScreen;
+    }
+
     const runtime = VoiceRuntime.findById(ctx.currentVoiceChannelId);
 
     invariant(runtime, {
@@ -29,7 +58,7 @@ const updateVoiceStateRoute = protectedProcedure
     });
 
     runtime.updateUserState(ctx.user.id, {
-      ...input
+      ...validatedInput
     });
 
     const newState = runtime.getUserState(ctx.user.id);

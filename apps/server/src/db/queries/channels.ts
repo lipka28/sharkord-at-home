@@ -154,7 +154,7 @@ const getChannelsForUser = async (userId: number): Promise<TChannel[]> => {
   return accessibleChannels;
 };
 
-const getChannelUserPermissions = async (
+const getAllChannelUserPermissions = async (
   userId: number
 ): Promise<TChannelUserPermissionsMap> => {
   const roleIds = await getUserRoleIds(userId);
@@ -237,14 +237,6 @@ const getChannelUserPermissions = async (
         continue;
       }
 
-      if (
-        !channel.private &&
-        permissionType === ChannelPermission.VIEW_CHANNEL
-      ) {
-        permissions[permissionType] = true;
-        continue;
-      }
-
       permissions[permissionType] = false;
     }
 
@@ -257,4 +249,72 @@ const getChannelUserPermissions = async (
   return channelPermissions;
 };
 
-export { channelUserCan, getChannelsForUser, getChannelUserPermissions };
+const getRoleChannelPermissions = async (
+  roleId: number,
+  channelId: number
+): Promise<Record<ChannelPermission, boolean>> => {
+  const rolePermissions = await db
+    .select({
+      permission: channelRolePermissions.permission,
+      allow: channelRolePermissions.allow
+    })
+    .from(channelRolePermissions)
+    .where(
+      and(
+        eq(channelRolePermissions.roleId, roleId),
+        eq(channelRolePermissions.channelId, channelId)
+      )
+    );
+
+  const allPermissionTypes = Object.values(ChannelPermission);
+  const permissions: Record<string, boolean> = {};
+
+  const permissionMap = new Map(
+    rolePermissions.map((p) => [p.permission as ChannelPermission, p.allow])
+  );
+
+  for (const permissionType of allPermissionTypes) {
+    permissions[permissionType] = permissionMap.get(permissionType) ?? false;
+  }
+
+  return permissions;
+};
+
+const getUserChannelPermissions = async (
+  userId: number,
+  channelId: number
+): Promise<Record<ChannelPermission, boolean>> => {
+  const userPermissions = await db
+    .select({
+      permission: channelUserPermissions.permission,
+      allow: channelUserPermissions.allow
+    })
+    .from(channelUserPermissions)
+    .where(
+      and(
+        eq(channelUserPermissions.userId, userId),
+        eq(channelUserPermissions.channelId, channelId)
+      )
+    );
+
+  const allPermissionTypes = Object.values(ChannelPermission);
+  const permissions: Record<string, boolean> = {};
+
+  const permissionMap = new Map(
+    userPermissions.map((p) => [p.permission as ChannelPermission, p.allow])
+  );
+
+  for (const permissionType of allPermissionTypes) {
+    permissions[permissionType] = permissionMap.get(permissionType) ?? false;
+  }
+
+  return permissions;
+};
+
+export {
+  channelUserCan,
+  getAllChannelUserPermissions,
+  getChannelsForUser,
+  getRoleChannelPermissions,
+  getUserChannelPermissions
+};

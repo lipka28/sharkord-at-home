@@ -101,6 +101,17 @@ const useTransportStats = () => {
 
   const collectStats = useCallback(async () => {
     if (!producerTransportRef.current && !consumerTransportRef.current) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        isMonitoring: false
+      }));
+
+      logVoice('Stopped transport stats monitoring (transports closed)');
       return;
     }
 
@@ -109,17 +120,40 @@ const useTransportStats = () => {
       let consumerStats: TransportStats | null = null;
 
       if (producerTransportRef.current) {
-        const producerStatsReport =
-          await producerTransportRef.current.getStats();
+        try {
+          const producerStatsReport =
+            await producerTransportRef.current.getStats();
 
-        producerStats = parseTransportStats(producerStatsReport, true);
+          producerStats = parseTransportStats(producerStatsReport, true);
+        } catch {
+          producerTransportRef.current = null;
+        }
       }
 
       if (consumerTransportRef.current) {
-        const consumerStatsReport =
-          await consumerTransportRef.current.getStats();
+        try {
+          const consumerStatsReport =
+            await consumerTransportRef.current.getStats();
 
-        consumerStats = parseTransportStats(consumerStatsReport, false);
+          consumerStats = parseTransportStats(consumerStatsReport, false);
+        } catch {
+          consumerTransportRef.current = null;
+        }
+      }
+
+      if (!producerTransportRef.current && !consumerTransportRef.current) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+
+        setStats((prev) => ({
+          ...prev,
+          isMonitoring: false
+        }));
+
+        logVoice('Stopped transport stats monitoring (all transports closed)');
+        return;
       }
 
       const previousProducer = previousStatsRef.current.producer;
@@ -232,6 +266,10 @@ const useTransportStats = () => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+
+    // Clear transport refs to prevent stale references
+    producerTransportRef.current = null;
+    consumerTransportRef.current = null;
 
     setStats((prev) => ({
       ...prev,

@@ -1,4 +1,9 @@
-import { ChannelType, Permission, ServerEvents } from '@sharkord/shared';
+import {
+  ChannelPermission,
+  ChannelType,
+  Permission,
+  ServerEvents
+} from '@sharkord/shared';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../../db';
@@ -19,7 +24,10 @@ const joinVoiceRoute = protectedProcedure
     })
   )
   .mutation(async ({ input, ctx }) => {
-    await ctx.needsPermission(Permission.JOIN_VOICE_CHANNELS);
+    await Promise.all([
+      ctx.needsPermission(Permission.JOIN_VOICE_CHANNELS),
+      ctx.needsChannelPermission(input.channelId, ChannelPermission.JOIN)
+    ]);
 
     const channel = await db
       .select()

@@ -1,4 +1,9 @@
-import { Permission, ServerEvents, StreamKind } from '@sharkord/shared';
+import {
+  ChannelPermission,
+  Permission,
+  ServerEvents,
+  StreamKind
+} from '@sharkord/shared';
 import { z } from 'zod';
 import { VoiceRuntime } from '../../runtimes/voice';
 import { invariant } from '../../utils/invariant';
@@ -19,6 +24,23 @@ const produceRoute = protectedProcedure
       code: 'BAD_REQUEST',
       message: 'User is not in a voice channel'
     });
+
+    if (input.kind === StreamKind.AUDIO) {
+      await ctx.needsChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.SPEAK
+      );
+    } else if (input.kind === StreamKind.VIDEO) {
+      await ctx.needsChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.WEBCAM
+      );
+    } else if (input.kind === StreamKind.SCREEN) {
+      await ctx.needsChannelPermission(
+        ctx.currentVoiceChannelId,
+        ChannelPermission.SHARE_SCREEN
+      );
+    }
 
     const runtime = VoiceRuntime.findById(ctx.currentVoiceChannelId);
 

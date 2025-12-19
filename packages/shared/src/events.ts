@@ -10,6 +10,7 @@ export enum ServerEvents {
   CHANNEL_CREATE = "channelCreate",
   CHANNEL_UPDATE = "channelUpdate",
   CHANNEL_DELETE = "channelDelete",
+  CHANNEL_PERMISSIONS_UPDATE = "channelPermissionsUpdate",
 
   USER_JOIN_VOICE = "userJoinVoice",
   USER_LEAVE_VOICE = "userLeaveVoice",

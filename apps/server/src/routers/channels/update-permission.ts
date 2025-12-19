@@ -1,11 +1,17 @@
-import { ChannelPermission, Permission } from '@sharkord/shared';
+import {
+  ActivityLogType,
+  ChannelPermission,
+  Permission
+} from '@sharkord/shared';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../../db';
+import { publishChannelPermissions } from '../../db/publishers';
 import {
   channelRolePermissions,
   channelUserPermissions
 } from '../../db/schema';
+import { enqueueActivityLog } from '../../queues/activity-log';
 import { protectedProcedure } from '../../utils/trpc';
 
 const allPermissions = Object.values(ChannelPermission);
@@ -71,6 +77,24 @@ const updatePermissionsRoute = protectedProcedure
         }));
 
         await tx.insert(channelRolePermissions).values(values);
+      }
+    });
+
+    publishChannelPermissions(input.channelId, {
+      targetUserId: input.userId,
+      targetRoleId: input.roleId
+    });
+    enqueueActivityLog({
+      type: ActivityLogType.UPDATED_CHANNEL_PERMISSIONS,
+      userId: ctx.user.id,
+      details: {
+        channelId: input.channelId,
+        targetUserId: input.userId,
+        targetRoleId: input.roleId,
+        permissions: allPermissions.map((perm) => ({
+          permission: perm,
+          allow: permissions.includes(perm)
+        }))
       }
     });
   });

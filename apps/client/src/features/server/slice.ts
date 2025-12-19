@@ -126,6 +126,8 @@ export const serverSlice = createSlice({
       state.ownUserId = action.payload.ownUserId;
       state.publicSettings = action.payload.publicSettings;
       state.voiceMap = action.payload.voiceMap;
+      state.serverId = action.payload.serverId;
+      state.channelPermissions = action.payload.channelPermissions;
     },
     addMessages: (
       state,
@@ -324,6 +326,12 @@ export const serverSlice = createSlice({
       action: PayloadAction<number | undefined>
     ) => {
       state.currentVoiceChannelId = action.payload;
+    },
+    setChannelPermissions: (
+      state,
+      action: PayloadAction<TChannelUserPermissionsMap>
+    ) => {
+      state.channelPermissions = action.payload;
     },
 
     // EMOJIS ------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { store } from '@/features/store';
-import type { TChannel } from '@sharkord/shared';
+import type { TChannel, TChannelUserPermissionsMap } from '@sharkord/shared';
 import { serverSliceActions } from '../slice';
 
 export const setChannels = (channels: TChannel[]) => {
@@ -25,4 +25,10 @@ export const updateChannel = (
 
 export const removeChannel = (channelId: number) => {
   store.dispatch(serverSliceActions.removeChannel({ channelId }));
+};
+
+export const setChannelPermissions = (
+  permissions: TChannelUserPermissionsMap
+) => {
+  store.dispatch(serverSliceActions.setChannelPermissions(permissions));
 };
