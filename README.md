@@ -15,17 +15,16 @@
 
 Sharkord is a self-hosted communication platform that brings the most important Discord-like features to your own infrastructure. Host voice channels, text chat, and file sharing on your terms—no third-party dependencies, complete data ownership, and full control over your group's communication.
 
----
-
 ## Wanna Try It Out?
 
 Check out the Live Demo at [demo.sharkord.com](https://demo.sharkord.com). You can login with demo:demo. For securty reasons, the demo user does not have admin privileges, so you won't be able to access admin features.
 
----
-
 ## Getting Started
 
 Sharkord is distributed as a standalone binary that bundles both server and client components. Get started by downloading the latest release for your platform from the [Releases](https://github.com/Sharkord/sharkord/releases) page. We ship binaries for Windows, macOS, and Linux.
+
+> [!NOTE]
+> Sharkord is in alpha stage. Bugs, incomplete features and breaking changes are to be expected.
 
 ### Linux x64
 
@@ -56,8 +55,6 @@ Once the server is running, open your web browser and navigate to `http://localh
 > [!NOTE]
 > Upon first launch, Sharkord will create a secure token and print it to the console. This token allows ANYONE to gain owner access to your server, so make sure to store it securely and do not lose it!
 
----
-
 ## Configuration
 
 Upon first run, Sharkord will generate a default configuration file located at `~/.config/sharkord/config.ini`. You can modify this file to customize your server settings.
@@ -76,25 +73,17 @@ Upon first run, Sharkord will generate a default configuration file located at `
 > [!IMPORTANT]  
 > `rtcMinPort` and `rtcMaxPort` will define how many concurrent voice/video connections your server can handle. Each active voice/video connection uses one UDP port. Make sure to adjust the range according to your expected load. These ports must be open in your firewall settings, both TCP and UDP. If you're running Sharkord in Docker, remember to map this port range from the host to the container.
 
----
-
 ## HTTPS Setup
 
 At the moment, Sharkord does not have built-in support for HTTPS. To secure your server with HTTPS, we recommend using a reverse proxy like Nginx or Caddy in front of Sharkord. This setup allows you to manage SSL/TLS certificates and handle secure connections.
-
----
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
----
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
 
 ## 🙏 Acknowledgments
 
@@ -108,8 +97,6 @@ Built with amazing open-source technologies:
 - [Radix UI](https://www.radix-ui.com)
 - [ShadCN UI](https://ui.shadcn.com/)
 - [Tailwind CSS](https://tailwindcss.com)
-
----
 
 <div align="center">
   <p>Made with ❤️ by the Sharkord team</p>
