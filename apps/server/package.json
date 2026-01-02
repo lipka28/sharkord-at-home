@@ -1,11 +1,11 @@
 {
   "name": "@sharkord/server",
-  "version": "0.0.4",
+  "version": "0.0.0",
   "module": "/src/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "DEBUG=\"mediasoup*\" bun --watch ./src/index.ts",
+    "dev": "DEBUG=* bun --watch ./src/index.ts",
     "build": "tsc -b && bun ./build/build.ts",
     "db:gen": "bunx drizzle-kit generate --dialect sqlite --schema ./src/db/schema.ts --out ./src/db/migrations",
     "format": "prettier --write \"**/*.ts*\" --config ./.prettierrc.json",
@@ -27,6 +27,7 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "eslint": "^8.56.0",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@types/yauzl": "^2.10.3",
     "@types/yazl": "^3.3.0"
   },
@@ -35,10 +36,10 @@
   },
   "dependencies": {
     "@sharkord/shared": "workspace:*",
+    "bun-sfe-autoupdater": "^0.0.4",
     "@trpc/server": "^11.6.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/semver": "^7.7.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.1",
     "chalk": "^5.6.2",
     "drizzle-orm": "^0.44.5",
     "file-type-mime": "^0.4.7",

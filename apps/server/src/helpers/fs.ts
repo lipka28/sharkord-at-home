@@ -3,11 +3,7 @@ import os from 'os';
 import path from 'path';
 
 const ensureDir = async (path: string) => {
-  const exists = await fs.exists(path);
-
-  if (!exists) {
-    await fs.mkdir(path, { recursive: true });
-  }
+  await fs.mkdir(path, { recursive: true });
 };
 
 const getAppDataPath = (): string => {

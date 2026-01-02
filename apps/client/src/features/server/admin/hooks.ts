@@ -1,7 +1,9 @@
+import { requestConfirmation } from '@/features/dialogs/actions';
 import { parseTrpcErrors, type TTrpcErrors } from '@/helpers/parse-trpc-errors';
 import { useForm } from '@/hooks/use-form';
 import { getTRPCClient } from '@/lib/trpc';
 import {
+  Permission,
   STORAGE_MAX_FILE_SIZE,
   STORAGE_MAX_QUOTA_PER_USER,
   STORAGE_OVERFLOW_ACTION,
@@ -25,6 +27,7 @@ import {
 import { filesize } from 'filesize';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useCan } from '../hooks';
 
 export const useAdminGeneral = () => {
   const [loading, setLoading] = useState(true);
@@ -89,6 +92,99 @@ export const useAdminGeneral = () => {
     onChange,
     logo
   };
+};
+
+export const useAdminUpdates = () => {
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<TTrpcErrors>({});
+  const [hasUpdate, setHasUpdate] = useState(false);
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+  const [canUpdate, setCanUpdate] = useState(false);
+
+  const fetchUpdate = useCallback(async () => {
+    setLoading(true);
+
+    const trpc = getTRPCClient();
+
+    try {
+      const { hasUpdate, latestVersion, canUpdate, currentVersion } =
+        await trpc.others.getUpdate.query();
+
+      setHasUpdate(hasUpdate);
+      setLatestVersion(latestVersion);
+      setCurrentVersion(currentVersion);
+      setCanUpdate(canUpdate);
+    } catch (error) {
+      console.error('Error fetching update:', error);
+      setErrors(parseTrpcErrors(error));
+    }
+
+    setLoading(false);
+  }, []);
+
+  const update = useCallback(async () => {
+    const answer = await requestConfirmation({
+      title: 'Are you sure you want to update the server?',
+      message:
+        'This will download and install the latest version of the server. The server will be restarted during the process, which may cause temporary downtime.',
+      confirmLabel: 'Update',
+      cancelLabel: 'Cancel'
+    });
+
+    if (!answer) return;
+
+    const trpc = getTRPCClient();
+
+    try {
+      trpc.others.updateServer.mutate();
+
+      toast.success('Server update initiated');
+    } catch (error) {
+      console.error('Error updating server:', error);
+      setErrors(parseTrpcErrors(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUpdate();
+  }, [fetchUpdate]);
+
+  return {
+    refetch: fetchUpdate,
+    loading,
+    hasUpdate,
+    latestVersion,
+    currentVersion,
+    canUpdate,
+    errors,
+    update
+  };
+};
+
+export const useHasUpdates = () => {
+  const can = useCan();
+  const [hasUpdates, setHasUpdates] = useState(false);
+
+  const fetchHasUpdates = useCallback(async () => {
+    if (!can(Permission.MANAGE_UPDATES)) return;
+
+    const trpc = getTRPCClient();
+
+    try {
+      const { hasUpdate } = await trpc.others.getUpdate.query();
+
+      setHasUpdates(hasUpdate);
+    } catch (error) {
+      console.error('Error fetching update status:', error);
+    }
+  }, [can]);
+
+  useEffect(() => {
+    fetchHasUpdates();
+  }, [fetchHasUpdates]);
+
+  return hasUpdates;
 };
 
 export const useAdminChannelGeneral = (channelId: number) => {

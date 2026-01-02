@@ -7,6 +7,7 @@ import { General } from './general';
 import { Invites } from './invites';
 import { Roles } from './roles';
 import { Storage } from './storage';
+import { Updates } from './updates';
 import { Users } from './users';
 
 type TServerSettingsProps = TServerScreenBaseProps;
@@ -23,6 +24,7 @@ const ServerSettings = memo(({ close }: TServerSettingsProps) => {
             <TabsTrigger value="storage">Storage</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="invites">Invites</TabsTrigger>
+            <TabsTrigger value="updates">Updates</TabsTrigger>
           </TabsList>
           <TabsContent value="general" className="space-y-6">
             <General />
@@ -41,6 +43,9 @@ const ServerSettings = memo(({ close }: TServerSettingsProps) => {
           </TabsContent>
           <TabsContent value="invites" className="space-y-6">
             <Invites />
+          </TabsContent>
+          <TabsContent value="updates" className="space-y-6">
+            <Updates />
           </TabsContent>
         </Tabs>
       </div>

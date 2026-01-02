@@ -61,14 +61,15 @@ Upon first run, Sharkord will generate a default configuration file located at `
 
 ### Options
 
-| Field         | Default | Description                                                                        |
-| ------------- | ------- | ---------------------------------------------------------------------------------- |
-| `port`        | `4991`  | The port number on which the server will listen for HTTP and WebSocket connections |
-| `debug`       | `false` | Enable debug logging for detailed server logs and diagnostics                      |
-| `maxFiles`    | `40`    | Maximum number of files that can be uploaded in a single request                   |
-| `maxFileSize` | `100`   | Maximum file size in megabytes (MB) allowed per uploaded file                      |
-| `rtcMinPort`  | `40000` | Minimum UDP port for WebRTC media traffic (voice/video)                            |
-| `rtcMaxPort`  | `40020` | Maximum UDP port for WebRTC media traffic (voice/video)                            |
+| Field         | Default | Description                                                                                 |
+| ------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `port`        | `4991`  | The port number on which the server will listen for HTTP and WebSocket connections          |
+| `debug`       | `false` | Enable debug logging for detailed server logs and diagnostics                               |
+| `maxFiles`    | `40`    | Maximum number of files that can be uploaded in a single request                            |
+| `maxFileSize` | `100`   | Maximum file size in megabytes (MB) allowed per uploaded file                               |
+| `rtcMinPort`  | `40000` | Minimum UDP port for WebRTC media traffic (voice/video)                                     |
+| `rtcMaxPort`  | `40020` | Maximum UDP port for WebRTC media traffic (voice/video)                                     |
+| `autoupdate`  | `false` | When enabled, it will automatically check for and install updates with no user intervention |
 
 > [!IMPORTANT]  
 > `rtcMinPort` and `rtcMaxPort` will define how many concurrent voice/video connections your server can handle. Each active voice/video connection uses one UDP port. Make sure to adjust the range according to your expected load. These ports must be open in your firewall settings, both TCP and UDP. If you're running Sharkord in Docker, remember to map this port range from the host to the container.

@@ -1,4 +1,8 @@
-import type { TArtifact, TVersionInfo } from '@sharkord/shared';
+import type { TArtifact } from '@sharkord/shared';
+import {
+  validateReleaseMetadata,
+  type TReleaseMetadata
+} from 'bun-sfe-autoupdater';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -136,7 +140,8 @@ const compile = async ({ out, target }: TTarget) => {
       'process.env.SHARKORD_ENV': '"production"',
       'process.env.SHARKORD_BUILD_VERSION': `"${version}"`,
       'process.env.SHARKORD_BUILD_DATE': `"${new Date().toISOString()}"`,
-      'process.env.SHARKORD_MEDIASOUP_BIN_NAME': `"${mediasoupBinary}"`
+      'process.env.SHARKORD_MEDIASOUP_BIN_NAME': `"${mediasoupBinary}"`,
+      'process.env.CURRENT_VERSION': `"${version}"`
     }
   });
 };
@@ -152,7 +157,10 @@ const getFileChecksum = async (filePath: string) => {
   return hashHex;
 };
 
-const getVersionInfo = async (targets: TTarget[], outPath: string) => {
+const getVersionInfo = async (
+  targets: TTarget[],
+  outPath: string
+): Promise<TReleaseMetadata> => {
   const version = await getCurrentVersion();
 
   const artifacts: TArtifact[] = [];
@@ -168,11 +176,11 @@ const getVersionInfo = async (targets: TTarget[], outPath: string) => {
     });
   }
 
-  const versionInfo: TVersionInfo = {
+  const versionInfo = validateReleaseMetadata({
     version,
     releaseDate: new Date().toISOString(),
     artifacts
-  };
+  });
 
   return versionInfo;
 };

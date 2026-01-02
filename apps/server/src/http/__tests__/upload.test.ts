@@ -1,6 +1,6 @@
 import { UploadHeaders, type TTempFile } from '@sharkord/shared';
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 import path from 'path';
 import { login } from '../../__tests__/helpers';
 import { tdb, testsBaseUrl } from '../../__tests__/setup';

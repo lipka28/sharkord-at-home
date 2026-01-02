@@ -17,6 +17,7 @@ import { initVoiceRuntimes } from './runtimes';
 import { createServers } from './utils/create-servers';
 import { loadMediasoup } from './utils/mediasoup';
 import { printDebug } from './utils/print-debug';
+import './utils/updater';
 
 await loadDb();
 await createServers();

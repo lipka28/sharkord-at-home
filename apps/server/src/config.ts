@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
 import { parse, stringify } from 'ini';
+import fs from 'node:fs/promises';
 import { ensureServerDirs } from './helpers/ensure-server-dirs';
 import { getPrivateIp, getPublicIp } from './helpers/network';
 import { CONFIG_INI_PATH } from './helpers/paths';
@@ -14,6 +14,7 @@ type TConfig = {
   server: {
     port: number;
     debug: boolean;
+    autoupdate: boolean;
   };
   http: {
     maxFiles: number;
@@ -30,7 +31,8 @@ type TConfig = {
 let config: TConfig = {
   server: {
     port: 4991,
-    debug: IS_DEVELOPMENT ? true : false
+    debug: IS_DEVELOPMENT ? true : false,
+    autoupdate: false
   },
   http: {
     maxFiles: 40,
