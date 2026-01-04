@@ -1,4 +1,5 @@
 import { Dialog } from '@/components/dialogs/dialogs';
+import { logDebug } from '@/helpers/browser-logger';
 import { getHostFromServer } from '@/helpers/get-file-url';
 import { connectToTRPC, getTRPCClient } from '@/lib/trpc';
 import { type TPublicServerSettings, type TServerInfo } from '@sharkord/shared';
@@ -68,7 +69,9 @@ export const joinServer = async (handshakeHash: string, password?: string) => {
   const trpc = getTRPCClient();
   const data = await trpc.others.joinServer.query({ handshakeHash, password });
 
-  console.log('Joined server with data:', data);
+  if (window.DEBUG) {
+    logDebug('joinServer', data);
+  }
 
   // TODO: store unsubscribe function and call it on disconnect
   initSubscriptions();

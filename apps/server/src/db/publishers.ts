@@ -47,7 +47,7 @@ const publishMessage = async (
 
   pubsub.publishFor(affectedUserIds, targetEvent, message);
 
-  // Only send count updates to users OTHER than the message author
+  // only send count updates to users OTHER than the message author
   const usersToNotify = affectedUserIds.filter((id) => id !== message.userId);
 
   const promises = usersToNotify.map(async (userId) => {

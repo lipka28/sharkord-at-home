@@ -2,6 +2,8 @@ import type { IRootState } from '@/features/store';
 import { createSelector } from '@reduxjs/toolkit';
 import { createCachedSelector } from 're-reselect';
 
+const DEFAULT_OBJECT = {};
+
 export const channelsSelector = (state: IRootState) => state.server.channels;
 
 export const selectedChannelIdSelector = (state: IRootState) =>
@@ -22,10 +24,10 @@ export const channelPermissionsSelector = (state: IRootState) =>
 export const channelsReadStatesSelector = (state: IRootState) =>
   state.server.readStatesMap;
 
-export const channelReadStateByIdSelector = createCachedSelector(
-  [channelsReadStatesSelector, (_: IRootState, channelId: number) => channelId],
-  (readStatesMap, channelId) => readStatesMap[channelId]
-)((_, channelId: number) => channelId);
+export const channelReadStateByIdSelector = (
+  state: IRootState,
+  channelId: number
+) => state.server.readStatesMap[channelId];
 
 export const channelByIdSelector = createCachedSelector(
   [channelsSelector, (_: IRootState, channelId: number) => channelId],
@@ -53,8 +55,7 @@ export const isCurrentVoiceChannelSelectedSelector = createSelector(
     selectedChannelId === currentVoiceChannelId
 );
 
-export const channelPermissionsByIdSelector = createCachedSelector(
-  [channelPermissionsSelector, (_: IRootState, channelId: number) => channelId],
-  (channelPermissions, channelId) =>
-    channelPermissions[channelId]?.permissions || {}
-)((_, channelId: number) => channelId);
+export const channelPermissionsByIdSelector = (
+  state: IRootState,
+  channelId: number
+) => state.server.channelPermissions[channelId] || DEFAULT_OBJECT;

@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import type { IRootState } from '../store';
 import { useChannelById, useChannelPermissionsById } from './channels/hooks';
+import { channelReadStateByIdSelector } from './channels/selectors';
 import {
   connectedSelector,
   connectingSelector,
@@ -14,7 +15,6 @@ import {
   publicServerSettingsSelector,
   serverNameSelector,
   typingUsersByChannelIdSelector,
-  unreadMessagesCountSelector,
   userRolesSelector,
   voiceUsersByChannelIdSelector
 } from './selectors';
@@ -75,9 +75,10 @@ export const useChannelCan = (channelId: number | undefined) => {
       if (isOwner || !channel || !channel?.private) return true;
 
       // if VIEW is false, no other permission matters
-      if (ownUserRoles[ChannelPermission.VIEW_CHANNEL] === false) return false;
+      if (ownUserRoles.permissions[ChannelPermission.VIEW_CHANNEL] === false)
+        return false;
 
-      return ownUserRoles[permission] === true;
+      return ownUserRoles.permissions[permission] === true;
     },
     [ownUserRoles, isOwner, channel]
   );
@@ -102,5 +103,5 @@ export const useOwnVoiceUser = () => useSelector(ownVoiceUserSelector);
 
 export const useUnreadMessagesCount = (channelId: number) =>
   useSelector((state: IRootState) =>
-    unreadMessagesCountSelector(state, channelId)
+    channelReadStateByIdSelector(state, channelId)
   );
