@@ -10,6 +10,7 @@ import { openDialog } from '@/features/dialogs/actions';
 import { openServerScreen } from '@/features/server-screens/actions';
 import { disconnectFromServer } from '@/features/server/actions';
 import { useServerName } from '@/features/server/hooks';
+import { cn } from '@/lib/utils';
 import { Permission } from '@sharkord/shared';
 import { Menu } from 'lucide-react';
 import { memo, useMemo } from 'react';
@@ -21,7 +22,11 @@ import { Categories } from './categories';
 import { UserControl } from './user-control';
 import { VoiceControl } from './voice-control';
 
-const LeftSidebar = memo(() => {
+type TLeftSidebarProps = {
+  className?: string;
+};
+
+const LeftSidebar = memo(({ className }: TLeftSidebarProps) => {
   const serverName = useServerName();
   const serverSettingsPermissions = useMemo(
     () => [
@@ -37,7 +42,12 @@ const LeftSidebar = memo(() => {
   );
 
   return (
-    <aside className="flex w-72 flex-col border-r border-border bg-card">
+    <aside
+      className={cn(
+        'flex w-72 flex-col border-r border-border bg-card h-full',
+        className
+      )}
+    >
       <div className="flex w-full justify-between h-12 items-center border-b border-border px-4">
         <h2 className="font-semibold text-foreground">{serverName}</h2>
         <div>
@@ -72,7 +82,7 @@ const LeftSidebar = memo(() => {
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
         <Categories />
       </div>
       <VoiceControl />

@@ -28,11 +28,20 @@ const User = memo(({ userId, name, banned }: TUserProps) => {
   );
 });
 
-const RightSidebar = memo(() => {
+type TRightSidebarProps = {
+  className?: string;
+};
+
+const RightSidebar = memo(({ className }: TRightSidebarProps) => {
   const users = useUsers();
 
   return (
-    <aside className="flex w-60 flex-col border-l border-border bg-card">
+    <aside
+      className={cn(
+        'flex w-60 flex-col border-l border-border bg-card h-full',
+        className
+      )}
+    >
       <div className="flex h-12 items-center border-b border-border px-4">
         <h3 className="text-sm font-semibold text-foreground">
           Members — {users.length}
