@@ -6,12 +6,14 @@ import { VoiceProvider } from '@/components/voice-provider';
 import { Permission } from '@sharkord/shared';
 import { memo } from 'react';
 import { ContentWrapper } from './content-wrapper';
+import { PreventBrowser } from './prevent-browser';
 
 const ServerView = memo(() => {
   return (
     <VoiceProvider>
       <div className="flex h-screen flex-col bg-background text-foreground dark">
         <div className="flex flex-1 overflow-hidden">
+          <PreventBrowser />
           <LeftSidebar />
           <ContentWrapper />
           <RightSidebar />

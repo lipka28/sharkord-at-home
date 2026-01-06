@@ -27,7 +27,7 @@ export const channelsReadStatesSelector = (state: IRootState) =>
 export const channelReadStateByIdSelector = (
   state: IRootState,
   channelId: number
-) => state.server.readStatesMap[channelId];
+) => state.server.readStatesMap[channelId] ?? 0;
 
 export const channelByIdSelector = createCachedSelector(
   [channelsSelector, (_: IRootState, channelId: number) => channelId],

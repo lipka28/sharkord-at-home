@@ -17,6 +17,7 @@ import {
 } from '@/helpers/storage';
 import { useForm } from '@/hooks/use-form';
 import { memo, useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 const Connect = memo(() => {
   const { values, r, setErrors, onChange } = useForm<{
@@ -72,6 +73,7 @@ const Connect = memo(() => {
 
       if (!response.ok) {
         const data = await response.json();
+
         setErrors(data.errors || {});
         return;
       }
@@ -86,6 +88,11 @@ const Connect = memo(() => {
       }
 
       await connect();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      toast.error(`Could not connect: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

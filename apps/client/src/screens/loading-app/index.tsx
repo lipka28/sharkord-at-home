@@ -9,9 +9,9 @@ const LoadingApp = memo(() => {
   }, []);
 
   return (
-    <div className="flex flex-col justify-center items-center h-full">
+    <div className="flex flex-col justify-center items-center h-full gap-2">
       <Spinner size="lg" />
-      <span className="mt-4 text-2xl">Loading...</span>
+      <span className="text-xl">Loading Sharkord</span>
     </div>
   );
 });

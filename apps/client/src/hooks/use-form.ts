@@ -88,6 +88,13 @@ const useForm = <T extends Record<string, unknown>>(initialValues: T) => {
     [setErrors]
   );
 
+  const setError = useCallback(
+    <K extends keyof T>(key: K | '_general', errorMessage: string) => {
+      setErrors((prev) => ({ ...prev, [key]: errorMessage }));
+    },
+    [setErrors]
+  );
+
   return {
     values,
     errors,
@@ -97,7 +104,8 @@ const useForm = <T extends Record<string, unknown>>(initialValues: T) => {
     r: registerInput,
     rr: registerRaw,
     rrn: registerRawNumber,
-    onChange
+    onChange,
+    setError
   };
 };
 
