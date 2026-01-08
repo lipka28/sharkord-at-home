@@ -17,6 +17,7 @@ import { getSettings } from '../../db/queries/server';
 import { getPublicUsers } from '../../db/queries/users';
 import { categories, channels, users } from '../../db/schema';
 import { logger } from '../../logger';
+import { eventBus } from '../../plugins/event-bus';
 import { enqueueActivityLog } from '../../queues/activity-log';
 import { enqueueLogin } from '../../queues/logins';
 import { VoiceRuntime } from '../../runtimes/voice';
@@ -126,6 +127,11 @@ const joinServerRoute = t.procedure
       type: ActivityLogType.USER_JOINED,
       userId: ctx.user.id,
       ip: connectionInfo?.ip
+    });
+
+    eventBus.emit('user:joined', {
+      userId: ctx.user.id,
+      username: ctx.user.name
     });
 
     return {

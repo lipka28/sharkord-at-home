@@ -17,6 +17,7 @@ import type {
 } from 'mediasoup/types';
 import { SERVER_PUBLIC_IP } from '../config';
 import { logger } from '../logger';
+import { eventBus } from '../plugins/event-bus';
 import { IS_PRODUCTION } from '../utils/env';
 import { mediaSoupWorker } from '../utils/mediasoup';
 
@@ -116,6 +117,10 @@ class VoiceRuntime {
   private screenProducers: TProducerMap = {};
   private consumers: TConsumerMap = {};
 
+  private externalCounter = 0;
+  private externalVideoProducers: TProducerMap = {};
+  private externalAudioProducers: TProducerMap = {};
+
   constructor(channelId: number) {
     this.id = channelId;
     voiceRuntimes.set(channelId, this);
@@ -161,6 +166,10 @@ class VoiceRuntime {
     logger.debug(`Initializing voice runtime for channel ${this.id}`);
 
     await this.createRouter();
+
+    eventBus.emit('voice:runtime_initialized', {
+      channelId: this.id
+    });
   };
 
   public destroy = async () => {
@@ -183,6 +192,14 @@ class VoiceRuntime {
     });
 
     Object.values(this.audioProducers).forEach((producer) => {
+      producer.close();
+    });
+
+    Object.values(this.externalVideoProducers).forEach((producer) => {
+      producer.close();
+    });
+
+    Object.values(this.externalAudioProducers).forEach((producer) => {
       producer.close();
     });
 
@@ -401,6 +418,10 @@ class VoiceRuntime {
         return this.audioProducers[userId];
       case StreamKind.SCREEN:
         return this.screenProducers[userId];
+      case StreamKind.EXTERNAL_VIDEO:
+        return this.externalVideoProducers[userId];
+      case StreamKind.EXTERNAL_AUDIO:
+        return this.externalAudioProducers[userId];
       default:
         return undefined;
     }
@@ -417,6 +438,10 @@ class VoiceRuntime {
       this.audioProducers[userId] = producer;
     } else if (type === StreamKind.SCREEN) {
       this.screenProducers[userId] = producer;
+    } else if (type === StreamKind.EXTERNAL_VIDEO) {
+      this.externalVideoProducers[userId] = producer;
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      this.externalAudioProducers[userId] = producer;
     }
 
     producer.observer.on('close', () => {
@@ -426,6 +451,10 @@ class VoiceRuntime {
         delete this.audioProducers[userId];
       } else if (type === StreamKind.SCREEN) {
         delete this.screenProducers[userId];
+      } else if (type === StreamKind.EXTERNAL_VIDEO) {
+        delete this.externalVideoProducers[userId];
+      } else if (type === StreamKind.EXTERNAL_AUDIO) {
+        delete this.externalAudioProducers[userId];
       }
     });
   };
@@ -449,6 +478,16 @@ class VoiceRuntime {
           producer = this.screenProducers[userId];
         }
         break;
+      case StreamKind.EXTERNAL_VIDEO:
+        if (this.externalVideoProducers[userId]) {
+          producer = this.externalVideoProducers[userId];
+        }
+        break;
+      case StreamKind.EXTERNAL_AUDIO:
+        if (this.externalAudioProducers[userId]) {
+          producer = this.externalAudioProducers[userId];
+        }
+        break;
       default:
         return;
     }
@@ -463,6 +502,10 @@ class VoiceRuntime {
       delete this.audioProducers[userId];
     } else if (type === StreamKind.SCREEN) {
       delete this.screenProducers[userId];
+    } else if (type === StreamKind.EXTERNAL_VIDEO) {
+      delete this.externalVideoProducers[userId];
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      delete this.externalAudioProducers[userId];
     }
   }
 
@@ -482,6 +525,26 @@ class VoiceRuntime {
     });
   };
 
+  public addExternalProducer = (type: StreamKind, producer: Producer) => {
+    const id = this.externalCounter++;
+
+    if (type === StreamKind.EXTERNAL_VIDEO) {
+      this.externalVideoProducers[id] = producer;
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      this.externalAudioProducers[id] = producer;
+    }
+
+    producer.observer.on('close', () => {
+      if (type === StreamKind.EXTERNAL_VIDEO) {
+        delete this.externalVideoProducers[id];
+      } else if (type === StreamKind.EXTERNAL_AUDIO) {
+        delete this.externalAudioProducers[id];
+      }
+    });
+
+    return id;
+  };
+
   public getRemoteIds = (userId: number): TRemoteProducerIds => {
     return {
       remoteVideoIds: Object.keys(this.videoProducers)
@@ -491,6 +554,12 @@ class VoiceRuntime {
         .filter((id) => +id !== userId)
         .map((id) => +id),
       remoteScreenIds: Object.keys(this.screenProducers)
+        .filter((id) => +id !== userId)
+        .map((id) => +id),
+      remoteExternalVideoIds: Object.keys(this.externalVideoProducers)
+        .filter((id) => +id !== userId)
+        .map((id) => +id),
+      remoteExternalAudioIds: Object.keys(this.externalAudioProducers)
         .filter((id) => +id !== userId)
         .map((id) => +id)
     };

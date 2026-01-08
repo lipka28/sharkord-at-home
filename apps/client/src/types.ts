@@ -51,5 +51,7 @@ export type TRemoteStreams = {
     [StreamKind.AUDIO]: MediaStream | undefined;
     [StreamKind.VIDEO]: MediaStream | undefined;
     [StreamKind.SCREEN]: MediaStream | undefined;
+    [StreamKind.EXTERNAL_AUDIO]: MediaStream | undefined;
+    [StreamKind.EXTERNAL_VIDEO]: MediaStream | undefined;
   };
 };

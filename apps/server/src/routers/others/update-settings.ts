@@ -15,7 +15,8 @@ const updateSettingsRoute = protectedProcedure
       storageUploadEnabled: z.boolean().optional(),
       storageUploadMaxFileSize: z.number().min(0).optional(),
       storageSpaceQuotaByUser: z.number().min(0).optional(),
-      storageOverflowAction: z.enum(StorageOverflowAction).optional()
+      storageOverflowAction: z.enum(StorageOverflowAction).optional(),
+      enablePlugins: z.boolean().optional()
     })
   )
   .mutation(async ({ input, ctx }) => {
@@ -27,7 +28,8 @@ const updateSettingsRoute = protectedProcedure
       storageUploadEnabled: input.storageUploadEnabled,
       storageUploadMaxFileSize: input.storageUploadMaxFileSize,
       storageSpaceQuotaByUser: input.storageSpaceQuotaByUser,
-      storageOverflowAction: input.storageOverflowAction
+      storageOverflowAction: input.storageOverflowAction,
+      enablePlugins: input.enablePlugins
     });
 
     await publishSettings();

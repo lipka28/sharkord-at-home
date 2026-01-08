@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../../db';
 import { publishMessage } from '../../db/publishers';
 import { messageFiles, messages } from '../../db/schema';
+import { eventBus } from '../../plugins/event-bus';
 import { enqueueProcessMetadata } from '../../queues/message-metadata';
 import { fileManager } from '../../utils/file-manager';
 import { protectedProcedure } from '../../utils/trpc';
@@ -51,6 +52,13 @@ const sendMessageRoute = protectedProcedure
 
     publishMessage(message.id, input.channelId, 'create');
     enqueueProcessMetadata(input.content, message.id);
+
+    eventBus.emit('message:created', {
+      messageId: message.id,
+      channelId: input.channelId,
+      userId: ctx.userId,
+      content: input.content
+    });
 
     return message.id;
   });

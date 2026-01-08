@@ -17,6 +17,8 @@ const useVoiceRefs = (userId: number) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const screenShareRef = useRef<HTMLVideoElement>(null);
+  const externalAudioRef = useRef<HTMLAudioElement>(null);
+  const externalVideoRef = useRef<HTMLVideoElement>(null);
 
   const videoStream = useMemo(() => {
     if (isOwnUser) return localVideoStream;
@@ -41,6 +43,18 @@ const useVoiceRefs = (userId: number) => {
 
     return remoteStreams[userId]?.[StreamKind.SCREEN];
   }, [remoteStreams, userId, isOwnUser, localScreenShareStream]);
+
+  const externalAudioStream = useMemo(() => {
+    if (isOwnUser) return undefined;
+
+    return remoteStreams[userId]?.[StreamKind.EXTERNAL_AUDIO];
+  }, [remoteStreams, userId, isOwnUser]);
+
+  const externalVideoStream = useMemo(() => {
+    if (isOwnUser) return undefined;
+
+    return remoteStreams[userId]?.[StreamKind.EXTERNAL_VIDEO];
+  }, [remoteStreams, userId, isOwnUser]);
 
   const { audioLevel, isSpeaking, speakingIntensity } =
     useAudioLevel(audioStreamForLevel);
@@ -69,13 +83,29 @@ const useVoiceRefs = (userId: number) => {
     audioRef.current.muted = ownVoiceState.soundMuted;
   }, [ownVoiceState.soundMuted]);
 
+  useEffect(() => {
+    if (!externalAudioStream || !externalAudioRef.current) return;
+
+    externalAudioRef.current.srcObject = externalAudioStream;
+  }, [externalAudioStream]);
+
+  useEffect(() => {
+    if (!externalVideoStream || !externalVideoRef.current) return;
+
+    externalVideoRef.current.srcObject = externalVideoStream;
+  }, [externalVideoStream]);
+
   return {
     videoRef,
     audioRef,
     screenShareRef,
+    externalAudioRef,
+    externalVideoRef,
     hasAudioStream: !!audioStream,
     hasVideoStream: !!videoStream,
     hasScreenShareStream: !!screenShareStream,
+    hasExternalAudioStream: !!externalAudioStream,
+    hasExternalVideoStream: !!externalVideoStream,
     audioLevel,
     isSpeaking,
     speakingIntensity
