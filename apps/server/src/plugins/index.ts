@@ -415,7 +415,8 @@ class PluginManager {
             });
 
             return externalId;
-          }
+          },
+          getListenInfo: () => VoiceRuntime.getListenInfo()
         }
       },
       commands: {

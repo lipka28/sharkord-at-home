@@ -575,6 +575,19 @@ class VoiceRuntime {
         .map((id) => +id)
     };
   };
+
+  public static getListenInfo = () => {
+    const info = getListenInfos();
+
+    const ip = info[0]?.ip;
+    const announcedAddress = info[0]?.announcedAddress;
+
+    if (!ip) {
+      throw new Error('No listen info available');
+    }
+
+    return { ip, announcedAddress };
+  };
 }
 
 export { VoiceRuntime };

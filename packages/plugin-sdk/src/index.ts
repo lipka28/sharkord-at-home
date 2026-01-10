@@ -61,6 +61,10 @@ export interface PluginContext {
         type: StreamKind,
         producer: Producer
       ): number;
+      getListenInfo(): {
+        ip: string;
+        announcedAddress: string | undefined;
+      };
     };
   };
 
