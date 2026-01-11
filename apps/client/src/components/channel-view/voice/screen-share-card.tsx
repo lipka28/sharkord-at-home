@@ -83,7 +83,6 @@ const ScreenShareCard = memo(
     const handlePinToggle = useCallback(() => {
       if (isPinned) {
         onUnpin?.();
-        // Reset zoom when unpinning
         resetZoom();
       } else {
         onPin?.();

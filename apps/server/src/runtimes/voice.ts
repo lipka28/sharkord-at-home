@@ -1,6 +1,8 @@
 import {
+  ServerEvents,
   StreamKind,
   type TChannelState,
+  type TExternalStreamsMap,
   type TRemoteProducerIds,
   type TTransportParams,
   type TVoiceMap,
@@ -17,8 +19,10 @@ import type {
 } from 'mediasoup/types';
 import { SERVER_PUBLIC_IP } from '../config';
 import { logger } from '../logger';
+import { eventBus } from '../plugins/event-bus';
 import { IS_PRODUCTION } from '../utils/env';
 import { mediaSoupWorker } from '../utils/mediasoup';
+import { pubsub } from '../utils/pubsub';
 
 const voiceRuntimes = new Map<number, VoiceRuntime>();
 
@@ -29,6 +33,17 @@ const defaultRouterOptions: RouterOptions<AppData> = {
       mimeType: 'video/VP8',
       clockRate: 90000,
       parameters: {
+        'x-google-start-bitrate': 1000
+      }
+    },
+    {
+      kind: 'video',
+      mimeType: 'video/H264',
+      clockRate: 90000,
+      parameters: {
+        'packetization-mode': 1,
+        'profile-level-id': '42e01f',
+        'level-asymmetry-allowed': 1,
         'x-google-start-bitrate': 1000
       }
     },
@@ -101,13 +116,13 @@ type TProducerMap = {
 
 type TConsumerMap = {
   [userId: number]: {
-    [remoteUserId: number]: Consumer<AppData>;
+    [remoteId: number]: Consumer<AppData>;
   };
 };
 
 class VoiceRuntime {
   public readonly id: number;
-  private state: TChannelState = { users: [] };
+  private state: TChannelState = { users: [], externalStreams: {} };
   private router?: Router<AppData>;
   private consumerTransports: TTransportMap = {};
   private producerTransports: TTransportMap = {};
@@ -115,6 +130,10 @@ class VoiceRuntime {
   private audioProducers: TProducerMap = {};
   private screenProducers: TProducerMap = {};
   private consumers: TConsumerMap = {};
+
+  private externalCounter = 0;
+  private externalVideoProducers: TProducerMap = {};
+  private externalAudioProducers: TProducerMap = {};
 
   constructor(channelId: number) {
     this.id = channelId;
@@ -157,10 +176,28 @@ class VoiceRuntime {
     return map;
   };
 
+  public static getExternalStreamsMap = (): TExternalStreamsMap => {
+    const map: TExternalStreamsMap = {};
+
+    voiceRuntimes.forEach((runtime, channelId) => {
+      if (map[channelId]) {
+        map[channelId] = [];
+      }
+
+      map[channelId] = runtime.getState().externalStreams;
+    });
+
+    return map;
+  };
+
   public init = async (): Promise<void> => {
     logger.debug(`Initializing voice runtime for channel ${this.id}`);
 
     await this.createRouter();
+
+    eventBus.emit('voice:runtime_initialized', {
+      channelId: this.id
+    });
   };
 
   public destroy = async () => {
@@ -183,6 +220,14 @@ class VoiceRuntime {
     });
 
     Object.values(this.audioProducers).forEach((producer) => {
+      producer.close();
+    });
+
+    Object.values(this.externalVideoProducers).forEach((producer) => {
+      producer.close();
+    });
+
+    Object.values(this.externalAudioProducers).forEach((producer) => {
       producer.close();
     });
 
@@ -401,6 +446,10 @@ class VoiceRuntime {
         return this.audioProducers[userId];
       case StreamKind.SCREEN:
         return this.screenProducers[userId];
+      case StreamKind.EXTERNAL_VIDEO:
+        return this.externalVideoProducers[userId];
+      case StreamKind.EXTERNAL_AUDIO:
+        return this.externalAudioProducers[userId];
       default:
         return undefined;
     }
@@ -417,6 +466,10 @@ class VoiceRuntime {
       this.audioProducers[userId] = producer;
     } else if (type === StreamKind.SCREEN) {
       this.screenProducers[userId] = producer;
+    } else if (type === StreamKind.EXTERNAL_VIDEO) {
+      this.externalVideoProducers[userId] = producer;
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      this.externalAudioProducers[userId] = producer;
     }
 
     producer.observer.on('close', () => {
@@ -426,6 +479,10 @@ class VoiceRuntime {
         delete this.audioProducers[userId];
       } else if (type === StreamKind.SCREEN) {
         delete this.screenProducers[userId];
+      } else if (type === StreamKind.EXTERNAL_VIDEO) {
+        delete this.externalVideoProducers[userId];
+      } else if (type === StreamKind.EXTERNAL_AUDIO) {
+        delete this.externalAudioProducers[userId];
       }
     });
   };
@@ -449,6 +506,16 @@ class VoiceRuntime {
           producer = this.screenProducers[userId];
         }
         break;
+      case StreamKind.EXTERNAL_VIDEO:
+        if (this.externalVideoProducers[userId]) {
+          producer = this.externalVideoProducers[userId];
+        }
+        break;
+      case StreamKind.EXTERNAL_AUDIO:
+        if (this.externalAudioProducers[userId]) {
+          producer = this.externalAudioProducers[userId];
+        }
+        break;
       default:
         return;
     }
@@ -463,23 +530,75 @@ class VoiceRuntime {
       delete this.audioProducers[userId];
     } else if (type === StreamKind.SCREEN) {
       delete this.screenProducers[userId];
+    } else if (type === StreamKind.EXTERNAL_VIDEO) {
+      delete this.externalVideoProducers[userId];
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      delete this.externalAudioProducers[userId];
     }
   }
 
   public addConsumer = (
     userId: number,
-    remoteUserId: number,
+    remoteId: number,
     consumer: Consumer<AppData>
   ) => {
     if (!this.consumers[userId]) {
       this.consumers[userId] = {};
     }
 
-    this.consumers[userId][remoteUserId] = consumer;
+    this.consumers[userId][remoteId] = consumer;
 
     consumer.observer.on('close', () => {
-      delete this.consumers[userId]?.[remoteUserId];
+      delete this.consumers[userId]?.[remoteId];
     });
+  };
+
+  private addExternalProducer = (type: StreamKind, producer: Producer) => {
+    const id = this.externalCounter++;
+
+    if (type === StreamKind.EXTERNAL_VIDEO) {
+      this.externalVideoProducers[id] = producer;
+    } else if (type === StreamKind.EXTERNAL_AUDIO) {
+      this.externalAudioProducers[id] = producer;
+    }
+
+    producer.observer.on('close', () => {
+      if (!this.state.externalStreams[id]) return;
+
+      delete this.state.externalStreams[id];
+
+      if (this.externalVideoProducers[id]) {
+        this.externalVideoProducers[id].close();
+        delete this.externalVideoProducers[id];
+      }
+
+      if (this.externalAudioProducers[id]) {
+        this.externalAudioProducers[id].close();
+        delete this.externalAudioProducers[id];
+      }
+
+      pubsub.publish(ServerEvents.VOICE_REMOVE_EXTERNAL_STREAM, {
+        channelId: this.id,
+        streamId: id
+      });
+    });
+
+    return id;
+  };
+
+  public addExternalStream = (
+    name: string,
+    type: StreamKind.EXTERNAL_VIDEO | StreamKind.EXTERNAL_AUDIO,
+    producer: Producer
+  ) => {
+    const streamId = this.addExternalProducer(type, producer);
+
+    this.state.externalStreams[streamId] = {
+      name,
+      type
+    };
+
+    return streamId;
   };
 
   public getRemoteIds = (userId: number): TRemoteProducerIds => {
@@ -492,8 +611,27 @@ class VoiceRuntime {
         .map((id) => +id),
       remoteScreenIds: Object.keys(this.screenProducers)
         .filter((id) => +id !== userId)
+        .map((id) => +id),
+      remoteExternalVideoIds: Object.keys(this.externalVideoProducers)
+        .filter((id) => +id !== userId)
+        .map((id) => +id),
+      remoteExternalAudioIds: Object.keys(this.externalAudioProducers)
+        .filter((id) => +id !== userId)
         .map((id) => +id)
     };
+  };
+
+  public static getListenInfo = () => {
+    const info = getListenInfos();
+
+    const ip = info[0]?.ip;
+    const announcedAddress = info[0]?.announcedAddress;
+
+    if (!ip) {
+      throw new Error('No listen info available');
+    }
+
+    return { ip, announcedAddress };
   };
 }
 

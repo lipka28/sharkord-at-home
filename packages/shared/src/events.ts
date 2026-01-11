@@ -17,6 +17,8 @@ export enum ServerEvents {
   USER_LEAVE_VOICE = "userLeaveVoice",
   USER_VOICE_STATE_UPDATE = "userVoiceStateUpdate",
 
+  VOICE_ADD_EXTERNAL_STREAM = "voiceAddExternalStream",
+  VOICE_REMOVE_EXTERNAL_STREAM = "voiceRemoveExternalStream",
   VOICE_NEW_PRODUCER = "voiceNewProducer",
   VOICE_PRODUCER_CLOSED = "voiceProducerClosed",
 
@@ -33,6 +35,7 @@ export enum ServerEvents {
   USER_DELETE = "userDelete",
 
   SERVER_SETTINGS_UPDATE = "serverSettingsUpdate",
+  PLUGIN_LOG = "pluginLog",
 
   CATEGORY_CREATE = "categoryCreate",
   CATEGORY_UPDATE = "categoryUpdate",

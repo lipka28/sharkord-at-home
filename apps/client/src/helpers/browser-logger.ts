@@ -6,8 +6,10 @@ const logVoice = (...args: unknown[]) => {
   );
 };
 
+const OVERRIDE_DEBUG = false;
+
 const logDebug = (...args: unknown[]) => {
-  if (window.DEBUG) {
+  if (window.DEBUG || OVERRIDE_DEBUG) {
     console.log('%c[DEBUG]', 'color: lightblue; font-weight: bold;', ...args);
   }
 };

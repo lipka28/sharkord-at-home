@@ -29,7 +29,8 @@ const settings = sqliteTable(
     storageQuota: integer('storage_quota').notNull(),
     storageUploadMaxFileSize: integer('storage_upload_max_file_size').notNull(),
     storageSpaceQuotaByUser: integer('storage_space_quota_by_user').notNull(),
-    storageOverflowAction: text('storage_overflow_action').notNull()
+    storageOverflowAction: text('storage_overflow_action').notNull(),
+    enablePlugins: integer('enable_plugins', { mode: 'boolean' }).notNull()
   },
   (t) => ({
     serverIdx: index('settings_server_idx').on(t.serverId)

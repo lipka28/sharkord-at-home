@@ -9,12 +9,16 @@ export enum StreamKind {
   AUDIO = "audio",
   VIDEO = "video",
   SCREEN = "screen",
+  EXTERNAL_VIDEO = "external_video",
+  EXTERNAL_AUDIO = "external_audio",
 }
 
 export type TRemoteProducerIds = {
   remoteVideoIds: number[];
   remoteAudioIds: number[];
   remoteScreenIds: number[];
+  remoteExternalVideoIds: number[];
+  remoteExternalAudioIds: number[];
 };
 
 export type TPublicServerSettings = Pick<
@@ -27,6 +31,7 @@ export type TPublicServerSettings = Pick<
   | "storageUploadMaxFileSize"
   | "storageSpaceQuotaByUser"
   | "storageOverflowAction"
+  | "enablePlugins"
 >;
 
 export type TGenericObject = {

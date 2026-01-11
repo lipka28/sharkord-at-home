@@ -46,7 +46,10 @@ export type TVoiceProvider = {
   ReturnType<typeof useLocalStreams>,
   'localAudioStream' | 'localVideoStream' | 'localScreenShareStream'
 > &
-  Pick<ReturnType<typeof useRemoteStreams>, 'remoteStreams'> &
+  Pick<
+    ReturnType<typeof useRemoteStreams>,
+    'remoteUserStreams' | 'externalStreams'
+  > &
   ReturnType<typeof useVoiceControls>;
 
 const VoiceProviderContext = createContext<TVoiceProvider>({
@@ -78,7 +81,8 @@ const VoiceProviderContext = createContext<TVoiceProvider>({
   localVideoStream: undefined,
   localScreenShareStream: undefined,
 
-  remoteStreams: {}
+  remoteUserStreams: {},
+  externalStreams: {}
 });
 
 type TVoiceProviderProps = {
@@ -94,12 +98,17 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
   const { devices } = useDevices();
 
   const {
-    addRemoteStream,
-    removeRemoteStream,
-    clearRemoteStreamsForUser,
-    clearRemoteStreams,
-    remoteStreams
+    addExternalStream,
+    removeExternalStream,
+    clearExternalStreams,
+    addRemoteUserStream,
+    removeRemoteUserStream,
+    clearRemoteUserStreamsForUser,
+    clearRemoteUserStreams,
+    externalStreams,
+    remoteUserStreams
   } = useRemoteStreams();
+
   const {
     localAudioProducer,
     localVideoProducer,
@@ -109,18 +118,23 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     localScreenShareProducer,
     setLocalAudioStream,
     setLocalVideoStream,
-    setLocalScreenShare
+    setLocalScreenShare,
+    clearLocalStreams
   } = useLocalStreams();
+
   const {
     producerTransport,
     consumerTransport,
     createProducerTransport,
     createConsumerTransport,
     consume,
-    consumeExistingProducers
+    consumeExistingProducers,
+    cleanupTransports
   } = useTransports({
-    addRemoteStream,
-    removeRemoteStream
+    addExternalStream,
+    removeExternalStream,
+    addRemoteUserStream,
+    removeRemoteUserStream
   });
 
   const {
@@ -379,6 +393,26 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     devices.screenFramerate
   ]);
 
+  const cleanup = useCallback(() => {
+    logVoice('Running voice provider cleanup');
+
+    stopMonitoring();
+    resetStats();
+    clearLocalStreams();
+    clearRemoteUserStreams();
+    clearExternalStreams();
+    cleanupTransports();
+
+    setConnectionStatus(ConnectionStatus.DISCONNECTED);
+  }, [
+    stopMonitoring,
+    resetStats,
+    clearLocalStreams,
+    clearRemoteUserStreams,
+    clearExternalStreams,
+    cleanupTransports
+  ]);
+
   const init = useCallback(
     async (
       incomingRouterRtpCapabilities: RtpCapabilities,
@@ -389,6 +423,8 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
         channelId
       });
 
+      cleanup();
+
       try {
         setLoading(true);
         setConnectionStatus(ConnectionStatus.CONNECTING);
@@ -396,6 +432,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
         routerRtpCapabilities.current = incomingRouterRtpCapabilities;
 
         const device = new Device();
+
         await device.load({
           routerRtpCapabilities: incomingRouterRtpCapabilities
         });
@@ -411,6 +448,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
         playSound(SoundType.OWN_USER_JOINED_VOICE_CHANNEL);
       } catch (error) {
         logVoice('Error initializing voice provider', { error });
+
         setConnectionStatus(ConnectionStatus.FAILED);
         setLoading(false);
 
@@ -418,6 +456,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       }
     },
     [
+      cleanup,
       createProducerTransport,
       createConsumerTransport,
       consumeExistingProducers,
@@ -445,45 +484,16 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
 
   useVoiceEvents({
     consume,
-    removeRemoteStream,
-    clearRemoteStreamsForUser,
+    removeRemoteUserStream,
+    removeExternalStream,
+    clearRemoteUserStreamsForUser,
     rtpCapabilities: routerRtpCapabilities.current!
   });
 
   useEffect(() => {
-    const producerTransportRef = producerTransport.current;
-    const consumerTransportRef = consumerTransport.current;
-    const audioProducerRef = localAudioProducer.current;
-    const videoProducerRef = localVideoProducer.current;
-    const screenShareProducerRef = localScreenShareProducer.current;
-
     return () => {
       logVoice('Voice provider unmounting, cleaning up resources');
-
-      localAudioStream?.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      localVideoStream?.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      localScreenShareStream?.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      audioProducerRef?.close();
-      videoProducerRef?.close();
-      screenShareProducerRef?.close();
-
-      clearRemoteStreams();
-
-      producerTransportRef?.close();
-      consumerTransportRef?.close();
-
-      stopMonitoring();
-      resetStats();
-      setConnectionStatus(ConnectionStatus.DISCONNECTED);
+      cleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -505,7 +515,8 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       localVideoStream,
       localScreenShareStream,
 
-      remoteStreams
+      remoteUserStreams,
+      externalStreams
     }),
     [
       loading,
@@ -522,7 +533,8 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
       localAudioStream,
       localVideoStream,
       localScreenShareStream,
-      remoteStreams
+      remoteUserStreams,
+      externalStreams
     ]
   );
 
@@ -530,7 +542,7 @@ const VoiceProvider = memo(({ children }: TVoiceProviderProps) => {
     <VoiceProviderContext.Provider value={contextValue}>
       <div className="relative">
         <FloatingPinnedCard
-          remoteStreams={remoteStreams}
+          remoteUserStreams={remoteUserStreams}
           localScreenShareStream={localScreenShareStream}
           localVideoStream={localVideoStream}
         />
