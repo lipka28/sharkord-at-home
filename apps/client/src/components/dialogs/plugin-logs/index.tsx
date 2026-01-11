@@ -173,7 +173,6 @@ const PluginLogsDialog = memo(
             <DialogTitle>{pluginId}</DialogTitle>
           </DialogHeader>
 
-          {/* Stats */}
           <div className="flex items-center gap-3 mt-4 text-sm">
             <div className="flex items-center gap-1.5">
               <Info className="w-4 h-4 text-primary" />
@@ -213,7 +212,6 @@ const PluginLogsDialog = memo(
             </div>
           </div>
 
-          {/* Logs Content */}
           <div className="flex-1 min-h-0 mt-4">
             {sortedLogs.length === 0 ? (
               <div className="flex items-center justify-center h-full text-muted-foreground">

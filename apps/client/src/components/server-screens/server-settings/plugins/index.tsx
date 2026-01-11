@@ -47,7 +47,7 @@ const PluginItem = memo(({ plugin, onToggle }: TPluginItemProps) => {
     openDialog(Dialog.PLUGIN_LOGS, {
       pluginName: plugin.name,
       pluginId: plugin.id,
-      logs: [] // Will be populated by subscription later
+      logs: [] // will be populated by subscription later
     });
   }, [plugin.name, plugin.id]);
 
@@ -59,7 +59,6 @@ const PluginItem = memo(({ plugin, onToggle }: TPluginItemProps) => {
 
   return (
     <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-      {/* Plugin Logo/Icon */}
       <div className="flex-shrink-0">
         {plugin.logo ? (
           <img
@@ -82,7 +81,6 @@ const PluginItem = memo(({ plugin, onToggle }: TPluginItemProps) => {
         )}
       </div>
 
-      {/* Plugin Info */}
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
