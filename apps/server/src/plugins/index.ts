@@ -30,25 +30,91 @@ type RegisteredCommand = {
   command: CommandDefinition<unknown>;
 };
 
+type PluginStatesMap = Record<string, boolean>;
+
+const PLUGIN_STATES_FILE = path.join(PLUGINS_PATH, 'plugin-states.json');
+
 class PluginManager {
   private loadedPlugins = new Map<string, PluginModule>();
   private loadErrors = new Map<string, string>();
   private logs = new Map<string, TLogEntry[]>();
   private logsListeners = new Map<string, (newLog: TLogEntry) => void>();
   private commands = new Map<string, RegisteredCommand[]>();
+  private pluginStates: PluginStatesMap = {};
+
+  private loadPluginStates = async () => {
+    try {
+      if (await fs.exists(PLUGIN_STATES_FILE)) {
+        const content = await fs.readFile(PLUGIN_STATES_FILE, 'utf-8');
+        this.pluginStates = JSON.parse(content);
+      } else {
+        this.pluginStates = {};
+        await this.savePluginStates();
+      }
+    } catch (error) {
+      logger.error('Failed to load plugin states:', error);
+      this.pluginStates = {};
+    }
+  };
+
+  private savePluginStates = async () => {
+    try {
+      await fs.writeFile(
+        PLUGIN_STATES_FILE,
+        JSON.stringify(this.pluginStates, null, 2),
+        'utf-8'
+      );
+    } catch (error) {
+      logger.error('Failed to save plugin states:', error);
+    }
+  };
+
+  private isPluginEnabled = (pluginId: string): boolean => {
+    return this.pluginStates[pluginId] ?? false;
+  };
+
+  private setPluginEnabled = async (pluginId: string, enabled: boolean) => {
+    this.pluginStates[pluginId] = enabled;
+    await this.savePluginStates();
+  };
+
+  public getPluginsFromPath = async (): Promise<string[]> => {
+    const files = await fs.readdir(PLUGINS_PATH);
+    const result: string[] = [];
+
+    logger.debug(`Found ${files.length} plugins`);
+
+    for (const file of files) {
+      try {
+        // check if it's a directory
+        const pluginPath = path.join(PLUGINS_PATH, file);
+        const stat = await fs.stat(pluginPath);
+
+        if (!stat.isDirectory()) continue;
+
+        result.push(file);
+      } catch {
+        // ignore
+      }
+    }
+
+    return result;
+  };
 
   public loadPlugins = async () => {
     const settings = await getSettings();
 
     if (!settings.enablePlugins) return;
 
-    const files = await fs.readdir(PLUGINS_PATH);
+    await this.loadPluginStates();
 
-    logger.debug(`Found ${files.length} plugins`);
+    const files = await this.getPluginsFromPath();
+
+    logger.info(`Loading ${files.length} plugins...`);
 
     for (const file of files) {
       try {
-        await pluginManager.load(file);
+        await this.load(file);
       } catch (error) {
         logger.error(
           `Failed to load plugin ${file}: ${(error as Error).message}`
@@ -213,35 +279,17 @@ class PluginManager {
   };
 
   public togglePlugin = async (pluginId: string, enabled: boolean) => {
-    const pluginPath = this.getPluginPath(pluginId);
-    const packageJsonPath = path.join(pluginPath, 'package.json');
+    const wasEnabled = this.isPluginEnabled(pluginId);
 
-    if (!(await fs.exists(packageJsonPath))) {
-      throw new Error('package.json not found');
-    }
+    await this.setPluginEnabled(pluginId, enabled);
 
-    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
-    const packageJson = JSON.parse(packageJsonContent);
-
-    if (!packageJson.sharkord) {
-      packageJson.sharkord = {};
-    }
-
-    packageJson.sharkord.enabled = enabled;
-
-    await fs.writeFile(
-      packageJsonPath,
-      JSON.stringify(packageJson, null, 2),
-      'utf-8'
-    );
-
-    // was disabled and is now being enabled
-    if (!enabled && this.loadedPlugins.has(pluginId)) {
+    // was enabled and is now being disabled
+    if (wasEnabled && !enabled && this.loadedPlugins.has(pluginId)) {
       await this.unload(pluginId);
     }
 
-    // was enabled and is now being disabled
-    if (enabled && !this.loadedPlugins.has(pluginId)) {
+    // was disabled and is now being enabled
+    if (!wasEnabled && enabled && !this.loadedPlugins.has(pluginId)) {
       await this.load(pluginId);
     }
   };
@@ -299,7 +347,7 @@ class PluginManager {
 
     return {
       id: pluginId,
-      enabled: packageJson.sharkord.enabled,
+      enabled: this.isPluginEnabled(pluginId),
       name: packageJson.name,
       path: pluginPath,
       description: packageJson.sharkord.description,
@@ -319,9 +367,7 @@ class PluginManager {
       throw new Error('Plugins are disabled.');
     }
 
-    const info = await this.getPluginInfo(pluginId);
-
-    if (!info.enabled) {
+    if (!this.isPluginEnabled(pluginId)) {
       this.logPlugin(
         pluginId,
         'debug',
@@ -329,6 +375,8 @@ class PluginManager {
       );
       return;
     }
+
+    const info = await this.getPluginInfo(pluginId);
 
     try {
       const ctx = this.createContext(pluginId);

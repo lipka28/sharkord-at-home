@@ -1,30 +1,32 @@
 import { Permission, type TPluginInfo } from '@sharkord/shared';
-import fs from 'node:fs/promises';
-import { PLUGINS_PATH } from '../../helpers/paths';
 import { pluginManager } from '../../plugins';
 import { protectedProcedure } from '../../utils/trpc';
 
 const getPluginsRoute = protectedProcedure.query(async ({ ctx }) => {
   await ctx.needsPermission(Permission.MANAGE_PLUGINS);
 
-  const files = await fs.readdir(PLUGINS_PATH);
+  const pluginIds = await pluginManager.getPluginsFromPath();
 
-  const plugins: TPluginInfo[] = await Promise.all(
-    files
-      .map(async (file) => {
-        try {
-          const info = await pluginManager.getPluginInfo(file);
+  const pluginResults = await Promise.all(
+    pluginIds.map(async (pluginId) => {
+      try {
+        const info = await pluginManager.getPluginInfo(pluginId);
 
-          return info;
-        } catch {
-          return undefined;
-        }
-      })
-      .filter((plugin) => plugin !== undefined) as Promise<TPluginInfo>[]
+        return info;
+      } catch {
+        return undefined;
+      }
+    })
   );
 
+  const plugins = pluginResults.filter(
+    (plugin): plugin is TPluginInfo => !!plugin
+  );
+
+  console.log('Retrieved plugins:', plugins);
+
   return {
-    plugins: plugins as TPluginInfo[]
+    plugins
   };
 });
 

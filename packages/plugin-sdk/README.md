@@ -118,8 +118,14 @@ Called when the plugin is unloaded or the server shuts down. Use this to:
 2. Create a `plugins` folder if it doesn't exist.
 3. Create a folder for your plugin (e.g., `my-plugin`).
 4. Copy your compiled plugin files (e.g., from `dist/`) into the `my-plugin` folder.
-5. Go to Sharkord settings and enable your plugin from the Plugins section.
-6. Go to the Plugins section in Sharkord and your plugin should be listed there.
+5. Enable your plugin by editing `data/plugins/plugin-states.json` or through the admin panel:
+   ```json
+   {
+     "my-plugin": true
+   }
+   ```
+6. Restart Sharkord or reload plugins from the admin panel.
+7. Your plugin should now be loaded and active!
 
 ## Best Practices
 
