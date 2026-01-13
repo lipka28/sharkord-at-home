@@ -95,9 +95,10 @@ const ExternalVideoCard = memo(
       <div
         ref={containerRef}
         className={cn(
-          'relative bg-card border border-border rounded-lg overflow-hidden group',
+          'relative bg-card rounded-lg overflow-hidden group',
           'flex items-center justify-center',
-          'min-h-0 aspect-video',
+          'w-full h-full',
+          'border border-border',
           className
         )}
         onWheel={handleWheel}
@@ -131,10 +132,10 @@ const ExternalVideoCard = memo(
           }}
         />
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-0 left-0 right-0 p-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-2 min-w-0">
-            <Video className="h-4 w-4 text-blue-400 flex-shrink-0" />
-            <span className="text-white font-medium text-sm truncate">
+            <Video className="size-3.5 text-blue-400 flex-shrink-0" />
+            <span className="text-white font-medium text-xs truncate">
               {name || 'External Video'}
             </span>
             {isZoomEnabled && zoom > 1 && (
