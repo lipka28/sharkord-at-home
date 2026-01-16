@@ -41,7 +41,7 @@ const changeBannerRoute = protectedProcedure
         .where(eq(users.id, ctx.userId));
     }
 
-    await publishUser(ctx.userId, 'update');
+    publishUser(ctx.userId, 'update');
   });
 
 export { changeBannerRoute };

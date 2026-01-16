@@ -43,7 +43,7 @@ const changeAvatarRoute = protectedProcedure
         .run();
     }
 
-    await publishUser(ctx.userId, 'update');
+    publishUser(ctx.userId, 'update');
   });
 
 export { changeAvatarRoute };
