@@ -120,6 +120,19 @@ type TConsumerMap = {
   };
 };
 
+type TExternalStreamProducers = {
+  audioProducer?: Producer<AppData>;
+  videoProducer?: Producer<AppData>;
+};
+
+type TExternalStreamInternal = {
+  title: string;
+  key: string;
+  pluginId: string;
+  avatarUrl?: string;
+  producers: TExternalStreamProducers;
+};
+
 class VoiceRuntime {
   public readonly id: number;
   private state: TChannelState = { users: [], externalStreams: {} };
@@ -132,6 +145,11 @@ class VoiceRuntime {
   private consumers: TConsumerMap = {};
 
   private externalCounter = 0;
+  private externalStreamsInternal: {
+    [streamId: number]: TExternalStreamInternal;
+  } = {};
+
+  // Legacy producer maps - kept for backward compatibility with consume logic
   private externalVideoProducers: TProducerMap = {};
   private externalAudioProducers: TProducerMap = {};
 
@@ -557,52 +575,243 @@ class VoiceRuntime {
     });
   };
 
-  private addExternalProducer = (type: StreamKind, producer: Producer) => {
-    const id = this.externalCounter++;
+  public createExternalStream = (options: {
+    title: string;
+    key: string;
+    pluginId: string;
+    avatarUrl?: string;
+    producers: {
+      audio?: Producer;
+      video?: Producer;
+    };
+  }) => {
+    const streamId = this.externalCounter++;
 
-    if (type === StreamKind.EXTERNAL_VIDEO) {
-      this.externalVideoProducers[id] = producer;
-    } else if (type === StreamKind.EXTERNAL_AUDIO) {
-      this.externalAudioProducers[id] = producer;
+    const { title, key, pluginId, avatarUrl, producers } = options;
+
+    this.externalStreamsInternal[streamId] = {
+      title,
+      key,
+      pluginId,
+      avatarUrl,
+      producers: {
+        audioProducer: producers.audio,
+        videoProducer: producers.video
+      }
+    };
+
+    if (producers.audio) {
+      this.externalAudioProducers[streamId] = producers.audio;
+      this.setupExternalProducerCloseHandler(
+        streamId,
+        'audio',
+        producers.audio
+      );
     }
 
-    producer.observer.on('close', () => {
-      if (!this.state.externalStreams[id]) return;
-
-      delete this.state.externalStreams[id];
-
-      if (this.externalVideoProducers[id]) {
-        this.externalVideoProducers[id].close();
-        delete this.externalVideoProducers[id];
-      }
-
-      if (this.externalAudioProducers[id]) {
-        this.externalAudioProducers[id].close();
-        delete this.externalAudioProducers[id];
-      }
-
-      pubsub.publish(ServerEvents.VOICE_REMOVE_EXTERNAL_STREAM, {
-        channelId: this.id,
-        streamId: id
-      });
-    });
-
-    return id;
-  };
-
-  public addExternalStream = (
-    name: string,
-    type: StreamKind.EXTERNAL_VIDEO | StreamKind.EXTERNAL_AUDIO,
-    producer: Producer
-  ) => {
-    const streamId = this.addExternalProducer(type, producer);
+    if (producers.video) {
+      this.externalVideoProducers[streamId] = producers.video;
+      this.setupExternalProducerCloseHandler(
+        streamId,
+        'video',
+        producers.video
+      );
+    }
 
     this.state.externalStreams[streamId] = {
-      name,
-      type
+      title,
+      key,
+      pluginId,
+      avatarUrl,
+      tracks: {
+        audio: !!producers.audio,
+        video: !!producers.video
+      }
     };
 
     return streamId;
+  };
+
+  private setupExternalProducerCloseHandler = (
+    streamId: number,
+    kind: 'audio' | 'video',
+    producer: Producer
+  ) => {
+    producer.observer.on('close', () => {
+      const internal = this.externalStreamsInternal[streamId];
+
+      if (!internal) return;
+
+      if (kind === 'audio') {
+        delete internal.producers.audioProducer;
+        delete this.externalAudioProducers[streamId];
+      } else {
+        delete internal.producers.videoProducer;
+        delete this.externalVideoProducers[streamId];
+      }
+
+      const hasProducers =
+        internal.producers.audioProducer || internal.producers.videoProducer;
+
+      if (!hasProducers) {
+        this.removeExternalStream(streamId);
+      } else {
+        const existingStream = this.state.externalStreams[streamId];
+
+        if (existingStream) {
+          existingStream.tracks = {
+            audio: !!internal.producers.audioProducer,
+            video: !!internal.producers.videoProducer
+          };
+
+          pubsub.publish(ServerEvents.VOICE_UPDATE_EXTERNAL_STREAM, {
+            channelId: this.id,
+            streamId,
+            stream: existingStream
+          });
+        }
+      }
+    });
+  };
+
+  public removeExternalStream = (streamId: number) => {
+    const internal = this.externalStreamsInternal[streamId];
+
+    if (!internal) return;
+
+    if (
+      internal.producers.audioProducer &&
+      !internal.producers.audioProducer.closed
+    ) {
+      internal.producers.audioProducer.close();
+    }
+    if (
+      internal.producers.videoProducer &&
+      !internal.producers.videoProducer.closed
+    ) {
+      internal.producers.videoProducer.close();
+    }
+
+    delete this.externalStreamsInternal[streamId];
+    delete this.externalAudioProducers[streamId];
+    delete this.externalVideoProducers[streamId];
+    delete this.state.externalStreams[streamId];
+
+    pubsub.publish(ServerEvents.VOICE_REMOVE_EXTERNAL_STREAM, {
+      channelId: this.id,
+      streamId
+    });
+  };
+
+  public updateExternalStream = (
+    streamId: number,
+    options: {
+      title?: string;
+      avatarUrl?: string;
+      producers?: {
+        audio?: Producer;
+        video?: Producer;
+      };
+    }
+  ) => {
+    const internal = this.externalStreamsInternal[streamId];
+
+    if (!internal) return;
+
+    const publicStream = this.state.externalStreams[streamId];
+
+    if (!publicStream) return;
+
+    if (options.title !== undefined) {
+      internal.title = options.title;
+      publicStream.title = options.title;
+    }
+
+    if (options.avatarUrl !== undefined) {
+      internal.avatarUrl = options.avatarUrl;
+      publicStream.avatarUrl = options.avatarUrl;
+    }
+
+    if (options.producers) {
+      if (options.producers.audio !== undefined) {
+        if (
+          internal.producers.audioProducer &&
+          !internal.producers.audioProducer.closed
+        ) {
+          internal.producers.audioProducer.close();
+        }
+
+        if (options.producers.audio) {
+          internal.producers.audioProducer = options.producers.audio;
+          this.externalAudioProducers[streamId] = options.producers.audio;
+          this.setupExternalProducerCloseHandler(
+            streamId,
+            'audio',
+            options.producers.audio
+          );
+
+          pubsub.publish(ServerEvents.VOICE_NEW_PRODUCER, {
+            channelId: this.id,
+            remoteId: streamId,
+            kind: StreamKind.EXTERNAL_AUDIO
+          });
+        } else {
+          delete internal.producers.audioProducer;
+          delete this.externalAudioProducers[streamId];
+        }
+      }
+
+      if (options.producers.video !== undefined) {
+        if (
+          internal.producers.videoProducer &&
+          !internal.producers.videoProducer.closed
+        ) {
+          internal.producers.videoProducer.close();
+        }
+
+        if (options.producers.video) {
+          internal.producers.videoProducer = options.producers.video;
+          this.externalVideoProducers[streamId] = options.producers.video;
+          this.setupExternalProducerCloseHandler(
+            streamId,
+            'video',
+            options.producers.video
+          );
+
+          pubsub.publish(ServerEvents.VOICE_NEW_PRODUCER, {
+            channelId: this.id,
+            remoteId: streamId,
+            kind: StreamKind.EXTERNAL_VIDEO
+          });
+        } else {
+          delete internal.producers.videoProducer;
+          delete this.externalVideoProducers[streamId];
+        }
+      }
+
+      publicStream.tracks = {
+        audio: !!internal.producers.audioProducer,
+        video: !!internal.producers.videoProducer
+      };
+    }
+
+    pubsub.publish(ServerEvents.VOICE_UPDATE_EXTERNAL_STREAM, {
+      channelId: this.id,
+      streamId,
+      stream: publicStream
+    });
+  };
+
+  public getExternalStreamProducer = (
+    streamId: number,
+    kind: 'audio' | 'video'
+  ): Producer | undefined => {
+    const internal = this.externalStreamsInternal[streamId];
+    if (!internal) return undefined;
+
+    return kind === 'audio'
+      ? internal.producers.audioProducer
+      : internal.producers.videoProducer;
   };
 
   public getRemoteIds = (userId: number): TRemoteProducerIds => {
@@ -616,12 +825,21 @@ class VoiceRuntime {
       remoteScreenIds: Object.keys(this.screenProducers)
         .filter((id) => +id !== userId)
         .map((id) => +id),
-      remoteExternalVideoIds: Object.keys(this.externalVideoProducers)
-        .filter((id) => +id !== userId)
-        .map((id) => +id),
-      remoteExternalAudioIds: Object.keys(this.externalAudioProducers)
-        .filter((id) => +id !== userId)
-        .map((id) => +id)
+      remoteExternalStreamIds: Object.keys(this.externalStreamsInternal).map(
+        (id) => +id
+      )
+    };
+  };
+
+  public getExternalStreamTracks = (
+    streamId: number
+  ): { audio: boolean; video: boolean } => {
+    const internal = this.externalStreamsInternal[streamId];
+    if (!internal) return { audio: false, video: false };
+
+    return {
+      audio: !!internal.producers.audioProducer,
+      video: !!internal.producers.videoProducer
     };
   };
 

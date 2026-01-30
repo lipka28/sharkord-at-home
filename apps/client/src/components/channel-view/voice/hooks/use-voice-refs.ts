@@ -1,10 +1,15 @@
+import { useVolumeControl } from '@/components/voice-provider/volume-control-context';
 import { useIsOwnUser } from '@/features/server/users/hooks';
 import { useVoice } from '@/features/server/voice/hooks';
 import { StreamKind } from '@sharkord/shared';
 import { useEffect, useMemo } from 'react';
 import { useAudioLevel } from './use-audio-level';
 
-const useVoiceRefs = (remoteId: number) => {
+const useVoiceRefs = (
+  remoteId: number,
+  pluginId?: string,
+  streamKey?: string
+) => {
   const {
     remoteUserStreams,
     externalStreams,
@@ -15,9 +20,16 @@ const useVoiceRefs = (remoteId: number) => {
     getOrCreateRefs
   } = useVoice();
   const isOwnUser = useIsOwnUser(remoteId);
+  const { getVolume, getUserVolumeKey, getExternalVolumeKey } =
+    useVolumeControl();
 
-  const { videoRef, audioRef, screenShareRef, externalAudioRef, externalVideoRef } =
-    getOrCreateRefs(remoteId);
+  const {
+    videoRef,
+    audioRef,
+    screenShareRef,
+    externalAudioRef,
+    externalVideoRef
+  } = getOrCreateRefs(remoteId);
 
   const videoStream = useMemo(() => {
     if (isOwnUser) return localVideoStream;
@@ -48,9 +60,7 @@ const useVoiceRefs = (remoteId: number) => {
 
     const external = externalStreams[remoteId];
 
-    return external?.kind === StreamKind.EXTERNAL_AUDIO
-      ? external.stream
-      : undefined;
+    return external?.audioStream;
   }, [externalStreams, remoteId, isOwnUser]);
 
   const externalVideoStream = useMemo(() => {
@@ -58,13 +68,19 @@ const useVoiceRefs = (remoteId: number) => {
 
     const external = externalStreams[remoteId];
 
-    return external?.kind === StreamKind.EXTERNAL_VIDEO
-      ? external.stream
-      : undefined;
+    return external?.videoStream;
   }, [externalStreams, remoteId, isOwnUser]);
 
   const { audioLevel, isSpeaking, speakingIntensity } =
     useAudioLevel(audioStreamForLevel);
+
+  const userVolumeKey = getUserVolumeKey(remoteId);
+  const userVolume = getVolume(userVolumeKey);
+
+  const externalVolumeKey =
+    pluginId && streamKey ? getExternalVolumeKey(pluginId, streamKey) : null;
+
+  const externalVolume = externalVolumeKey ? getVolume(externalVolumeKey) : 100;
 
   useEffect(() => {
     if (!videoStream || !videoRef.current) return;
@@ -76,7 +92,8 @@ const useVoiceRefs = (remoteId: number) => {
     if (!audioStream || !audioRef.current) return;
 
     audioRef.current.srcObject = audioStream;
-  }, [audioStream, audioRef]);
+    audioRef.current.volume = userVolume / 100;
+  }, [audioStream, audioRef, userVolume]);
 
   useEffect(() => {
     if (!screenShareStream || !screenShareRef.current) return;
@@ -94,7 +111,8 @@ const useVoiceRefs = (remoteId: number) => {
     if (!externalAudioStream || !externalAudioRef.current) return;
 
     externalAudioRef.current.srcObject = externalAudioStream;
-  }, [externalAudioStream, externalAudioRef]);
+    externalAudioRef.current.volume = externalVolume / 100;
+  }, [externalAudioStream, externalAudioRef, externalVolume]);
 
   useEffect(() => {
     if (!externalVideoStream || !externalVideoRef.current) return;
