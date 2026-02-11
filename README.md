@@ -4,8 +4,6 @@
   
   [![Version](https://img.shields.io/github/v/release/Sharkord/sharkord)](https://github.com/Sharkord/sharkord/releases)
   [![License](https://img.shields.io/github/license/Sharkord/sharkord)](LICENSE)
-  [![Downloads](https://img.shields.io/github/downloads/Sharkord/sharkord/total)](https://github.com/Sharkord/sharkord/releases)
-  [![Last Commit](https://img.shields.io/github/last-commit/Sharkord/sharkord)](https://github.com/Sharkord/sharkord/commits)
   
   [![Bun](https://img.shields.io/badge/Bun-v1.3.5-green.svg)](https://bun.sh)
   [![Mediasoup](https://img.shields.io/badge/Mediasoup-v3.19.11-green.svg)](https://mediasoup.org)
@@ -13,44 +11,26 @@
 
 ## What is Sharkord?
 
-> [!NOTE]
-> Sharkord is in alpha stage. Bugs, incomplete features and breaking changes are to be expected.
+> [!CAUTION]
+> This is a fork of an upstream Sharkord and might contain some unexpected changes. You can find the upstream version here [https://github.com/Sharkord/sharkord](https://github.com/Sharkord/sharkord)
 
 Sharkord is a self-hosted communication platform that brings the most important Discord-like features to your own infrastructure. Host voice channels, text chat, and file sharing on your terms—no third-party dependencies, complete data ownership, and full control over your group's communication.
 
-## Wanna Try It Out?
-
-Check out the Live Demo at [demo.sharkord.com](https://demo.sharkord.com). The amount of ports opened for the demo is limited, so voice and video features will only work for a couple of users at a time. If you want to test it with a larger group, we recommend running your own instance.
-
 ## Getting Started
 
-Sharkord is distributed as a standalone binary that bundles both server and client components. Get started by downloading the latest release for your platform from the [Releases](https://github.com/Sharkord/sharkord/releases) page. We ship binaries for Windows, macOS, and Linux.
+Sharkord is distributed as a standalone binary that bundles both server and client components. Get started by downloading the latest release for your platform from the [Releases](https://github.com/lipka28/sharkord-at-home/releases) page. We ship binaries for Windows, macOS, and Linux.
 
 #### Linux x64
 
 ```bash
-curl -L https://github.com/sharkord/sharkord/releases/latest/download/sharkord-linux-x64 -o sharkord
+curl -L https://github.com/lipka28/sharkord-at-home/releases/latest/download/sharkord-linux-x64 -o sharkord
 chmod +x sharkord
 ./sharkord
 ```
 
-#### Docker
-
-Sharkord can also be run using Docker. Here's how to run it:
-
-```bash
-docker run \
-  -p 4991:4991/tcp \
-  -p 40000-40020:40000-40020/tcp \
-  -p 40000-40020:40000-40020/udp \
-  -v ./data:/root/.config/sharkord \
-  --name sharkord \
-  sharkord/sharkord:latest
-```
-
 #### Windows
 
-1. Download the latest `sharkord-windows-x64.exe` from the [Releases](https://github.com/sharkord/sharkord/releases/latest) page.
+1. Download the latest `sharkord-windows-x64.exe` from the [Releases](https://github.com/lipka28/sharkord-at-home/releases) page.
 2. Open Command Prompt and navigate to the directory where you downloaded the executable.
 3. Run the server with the command: `.\sharkord-windows-x64.exe`
 
@@ -108,10 +88,6 @@ Example plugins:
 
 - [Sharkord Music Bot](https://github.com/diogomartino/sharkord-music-bot) - A plugin that adds music playback capabilities to Sharkord voice channels using YouTube as a source.
 - [Sharkord IPTV](https://github.com/diogomartino/sharkord-iptv) - A plugin that allows users to stream IPTV channels directly within Sharkord voice channels.
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
 
