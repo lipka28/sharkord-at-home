@@ -3,7 +3,7 @@ name: Build binaries
 on:
   workflow_dispatch:
     inputs:
-      version:
+      bump:
         description: "Version bump"
         required: true
         type: choice
