@@ -82,7 +82,7 @@ const VoiceUserCard = memo(
             muted
             playsInline
             className={cn(
-              'absolute inset-0 w-full h-full object-cover',
+              'absolute inset-0 w-full h-full object-contain',
               isOwnUser && devices.mirrorOwnVideo && '-scale-x-100'
             )}
           />
