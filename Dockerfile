@@ -1,9 +1,10 @@
 FROM oven/bun:1.3.5
 
-COPY apps/server/build/out/sharkord-linux-x64 /sharkord
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 ENV RUNNING_IN_DOCKER=true
 
-RUN chmod +x /sharkord
+RUN curl -L -o /sharkord https://github.com/lipka28/sharkord-at-home/releases/latest/download/sharkord-linux-x64 && \
+    chmod +x /sharkord
 
 CMD ["/sharkord"]
