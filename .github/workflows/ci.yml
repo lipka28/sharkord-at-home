@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  # push:
-  #   branches: [main, development]
-  # pull_request:
+  push:
+    branches: [main, development]
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -32,10 +32,10 @@ jobs:
       - name: Typecheck
         run: bun check-types
 
-      - name: Build
-        working-directory: apps/server
-        run: bun run build
-
       - name: Run tests
         working-directory: apps/server
         run: bun test
+
+      - name: Build
+        working-directory: apps/server
+        run: bun run build
