@@ -2,13 +2,18 @@ import type {
   CommandDefinition,
   TInvokerContext,
   TPluginComponentsMapBySlotId,
-  TPluginSettingDefinition
+  TPluginSettingDefinition,
+  TPluginSlotContext
 } from '@sharkord/shared';
 import { PluginSlot } from '@sharkord/shared';
 import type { AppData, Producer, Router } from 'mediasoup/types';
 
 export { PluginSlot };
-export type { TInvokerContext, TPluginComponentsMapBySlotId };
+export type {
+  TInvokerContext,
+  TPluginComponentsMapBySlotId,
+  TPluginSlotContext
+};
 
 export type TCreateStreamOptions = {
   channelId: number;

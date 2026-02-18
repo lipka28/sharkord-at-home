@@ -154,5 +154,6 @@ export type TPluginComponentsMap = {
 export type TPluginSlotContext = {
   users: TJoinedPublicUser[];
   selectedChannelId: number | undefined;
+  currentVoiceChannelId: number | undefined;
   sendMessage: (channelId: number, content: string) => void;
 };
