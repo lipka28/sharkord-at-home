@@ -11,8 +11,9 @@ export enum LocalStorageKey {
   VOICE_CHAT_SIDEBAR_WIDTH = 'sharkord-voice-chat-sidebar-width',
   VOLUME_SETTINGS = 'sharkord-volume-settings',
   RECENT_EMOJIS = 'sharkord-recent-emojis',
-  HIDE_NON_VIDEO_PARTICIPANTS = 'sharkord-hide-non-video-participants',
-  DEBUG = 'sharkord-debug'
+  DEBUG = 'sharkord-debug',
+  DRAFT_MESSAGES = 'sharkord-draft-messages',
+  HIDE_NON_VIDEO_PARTICIPANTS = 'sharkord-hide-non-video-participants'
 }
 
 export enum SessionStorageKey {

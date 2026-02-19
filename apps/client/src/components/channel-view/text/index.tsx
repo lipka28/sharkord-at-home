@@ -23,7 +23,7 @@ import { Spinner } from '@sharkord/ui';
 import { filesize } from 'filesize';
 import { throttle } from 'lodash-es';
 import { Paperclip, Send } from 'lucide-react';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@sharkord/ui';
 import { FileCard } from './file-card';
@@ -31,6 +31,7 @@ import { MessagesGroup } from './messages-group';
 import { TextSkeleton } from './text-skeleton';
 import { useScrollController } from './use-scroll-controller';
 import { UsersTyping } from './users-typing';
+import { getChannelDraftKey, getDraftMessage, setDraftMessage } from './use-draft-messages';
 
 type TChannelProps = {
   channelId: number;
@@ -40,7 +41,9 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
   const { messages, hasMore, loadMore, loading, fetching, groupedMessages } =
     useMessages(channelId);
 
-  const [newMessage, setNewMessage] = useState('');
+  const draftChannelKey = getChannelDraftKey(channelId);
+
+  const [newMessage, setNewMessage] = useState(getDraftMessage(draftChannelKey));
   const allPluginCommands = useFlatPluginCommands();
   const typingUsers = useTypingUsersByChannelId(channelId);
 
@@ -134,7 +137,7 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
       setSending(false);
     }
 
-    setNewMessage('');
+    setNewMessageHandler('');
     clearFiles();
   }, [
     newMessage,
@@ -159,6 +162,12 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
     },
     [removeFile]
   );
+
+  const setNewMessageHandler = useCallback((value: string) => {
+    setNewMessage(value);
+
+    setDraftMessage(draftChannelKey, value);
+  }, [setNewMessage, setDraftMessage]);
 
   if (!channelCan(ChannelPermission.VIEW_CHANNEL) || loading) {
     return <TextSkeleton />;
@@ -215,7 +224,7 @@ const TextChannel = memo(({ channelId }: TChannelProps) => {
         <div className="flex items-center gap-2 rounded-lg">
           <TiptapInput
             value={newMessage}
-            onChange={setNewMessage}
+            onChange={setNewMessageHandler}
             onSubmit={onSendMessage}
             onTyping={sendTypingSignal}
             disabled={uploading || !canSendMessages}
